@@ -5,17 +5,17 @@ import LoginView from '../views/Login.vue';
 const routes = [
   {
     path: '/',
-    name: 'Home',
+    name: 'home',
     component: HomeView,
   },
   {
     path: '/login',
-    name: 'Login',
+    name: 'login',
     component: LoginView,
   },
   {
     path: '/swagger',
-    name: 'Swagger',
+    name: 'swagger',
     component: SwaggerView,
   },
 ];

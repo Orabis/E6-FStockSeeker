@@ -14,6 +14,9 @@ importers:
       axios:
         specifier: ^1.7.9
         version: 1.7.9
+      js-cookie:
+        specifier: ^3.0.5
+        version: 3.0.5
       primeicons:
         specifier: ^7.0.0
         version: 7.0.0
@@ -643,6 +646,10 @@ packages:
 
   is-hexadecimal@1.0.4:
     resolution: {integrity: sha512-gyPJuv83bHMpocVYoqof5VDiZveEoGoFL8m3BXNb2VW8Xs+rz9kqO8LOQ5DH6EsuvilT1ApazU0pyl+ytbPtlw==}
+
+  js-cookie@3.0.5:
+    resolution: {integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==}
+    engines: {node: '>=14'}
 
   js-file-download@0.4.12:
     resolution: {integrity: sha512-rML+NkoD08p5Dllpjo0ffy4jRHeY6Zsapvr/W86N7E0yuzAO6qa5X9+xog6zQNlH102J7IXljNY2FtS6Lj3ucg==}
@@ -1778,6 +1785,8 @@ snapshots:
   is-decimal@1.0.4: {}
 
   is-hexadecimal@1.0.4: {}
+
+  js-cookie@3.0.5: {}
 
   js-file-download@0.4.12: {}
 

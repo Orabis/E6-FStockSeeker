@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { createUser } from '../api.js';
+import { onMounted, ref } from 'vue';
+import { createUser, getuserinfo} from '../api.js';
 import { useToast } from 'primevue/usetoast';
 import PMessage from 'primevue/message';
 
@@ -9,6 +9,8 @@ const email = ref('');
 const password = ref('');
 const errors = ref({ username: '', email: '' });
 const toast = useToast();
+const isAuth = ref(false);
+const userInfo = ref(null);
 
 async function make_user() {
   errors.value = { username: '', email: '' };
@@ -34,12 +36,30 @@ async function make_user() {
   }
 }
 
+onMounted(async() => {
+  const accessToken = sessionStorage.getItem('access_token');
+  if (accessToken) {
+    isAuth.value = true;
+    try{
+      userInfo.value = await getuserinfo();}
+      catch (error){
+        console.error("erreur de récupération: ", error);
+        isAuth.value = false;
+      }
+    }
+});
+
 </script>
 
 <template>
   <div class="container">  
     <span>StockSeeker Login</span>
-    <div class="form-container">
+    <div v-if="isAuth" class="form-container">
+      <p v-if="userInfo">Bienvenue, {{ userInfo.username }}</p>
+      <p v-if="userInfo">email :{{ userInfo.email }}</p>
+    </div>
+
+    <div v-else class="form-container">
       <div class="form">
         <label for="username">Username:</label>
         <input type="text" class="p-inputtext" name="username" id="name" v-model="username" required>

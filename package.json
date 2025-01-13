@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@primevue/themes": "^4.2.5",
+    "axios": "^1.7.9",
+    "primeicons": "^7.0.0",
     "primevue": "^4.2.5",
     "swagger-ui": "^5.18.2",
     "vue": "^3.5.13",

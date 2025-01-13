@@ -3,6 +3,6 @@
 </script>
 
 <template>
-<span style="color:crimson">Home</span>
+<span>Home</span>
 
 </template>

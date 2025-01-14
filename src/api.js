@@ -40,37 +40,41 @@ export const getuserinfo = async () => {
     return response.data;
 };
 const refreshAccessToken = async () => {
-    try {
-      const response = await api.post('/token/refresh', {'refresh': Cookies.get('refresh')}, {
-        withCredentials: true, 
-      });
-  
-      const { access, refresh } = response.data;
-      
-      return [access, refresh];
-    } catch (error) {
-      console.error('Refresh token request failed:', error);
-      return null;
-    }
-  };
+  try {
+    const response = await api.post('/token/refresh', {'refresh': Cookies.get('refresh')}, {
+      withCredentials: true, 
+    });
+
+    const { access, refresh } = response.data;
+    
+    return [access, refresh];
+  } catch (error) {
+    console.error('Refresh token request failed:', error);
+    return null;
+  }
+};
 
 api.interceptors.response.use(
-    (response) => response, 
-    async (error) => {
-      if (error.response && error.response.status === 401) {
-        const [newAccessToken,newRefreshToken] = await refreshAccessToken();
-        if (newAccessToken) {
-            Cookies.set('refresh', newRefreshToken,{
-                expires: 1,
-                secure: true,
-                sameSite: 'strict',
-            });
+  (response) => response, 
+  async (error) => {
+    if (error.response && error.response.status === 401) {
+      const errorMessage = error.response.data.detail;
+      if (errorMessage === "No active account found with the given credentials") {
+        return Promise.reject(error);
+      } else {
+        const tokens = await refreshAccessToken();
+        if (tokens) {
+          const [newAccessToken, newRefreshToken] = tokens;
+          Cookies.set('refresh', newRefreshToken, {
+            expires: 1,
+            secure: true,
+            sameSite: 'strict',
+          });
           error.config.headers['Authorization'] = `Bearer ${newAccessToken}`;
           return api(error.config);
         }
       }
-      return Promise.reject(error);
     }
-  );
-// const response = await api.post('/users', userData, { 
-// headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},);
+    return Promise.reject(error);
+  }
+);

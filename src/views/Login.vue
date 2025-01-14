@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { createUser, loginUser,getuserinfo } from '../api.js';
+import { createUser, loginUser, getuserinfo } from '../api.js';
 import { useToast } from 'primevue/usetoast';
 import PMessage from 'primevue/message';
 import { useAuth } from '../composables/useAuth.js';
@@ -26,9 +26,9 @@ async function make_user() {
       email: emailRegister.value,
       password: passwordRegister.value,
     });
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Utilisateur créé !' });
     isAuth.value = true;
     userInfo.value = await getuserinfo();
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Utilisateur créé !' });
   } catch (error) {
     if (error.response && error.response.data) {
       const data = error.response.data;
@@ -57,6 +57,9 @@ async function login() {
   } catch (error) {
     if (error.response && error.response.data) {
       const data = error.response.data;
+      if (data.detail) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: data.detail });
+      }
       if (data.username) {
         loginErrors.value.username = data.username[0];
       }

@@ -17,11 +17,6 @@
           icon: 'pi pi-home',
         },
         {
-          label:'Logout',
-          command:() => logout(),
-          icon:'pi pi-sign-out',
-        },
-        {
           label:userInfo.value ? userInfo.value.username : 'Profil',
           command:() => router.push({name:'login'}),
           icon:'pi pi-user',
@@ -30,6 +25,11 @@
           label:'Swagger',
           command:() => router.push({name:'swagger'}),
           icon:'pi pi-cog',
+        },
+        {
+          label:'Logout',
+          command:() => logout(),
+          icon:'pi pi-sign-out',
         },
       ];
       } else {

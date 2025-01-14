@@ -20,6 +20,19 @@ export const createUser = async (userData) => {
     return response.data
 };
 
+export const loginUser = async (userData) => {
+    const response = await api.post('/token/', userData);
+    const { access, refresh } = response.data;
+
+    Cookies.set('refresh', refresh,{
+        expires: 1,
+        secure: true,
+        sameSite: 'strict',
+    });
+    sessionStorage.setItem('access_token', access);
+    return response.data;
+};
+
 export const getuserinfo = async () => {
     const response = await api.get('/users/me/', {
         headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},

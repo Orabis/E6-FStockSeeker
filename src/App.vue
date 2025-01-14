@@ -3,32 +3,61 @@
   import Menubar from 'primevue/menubar';
   import { useRouter } from 'vue-router';
   import Toast from 'primevue/toast';
-
+  import { useAuth } from './composables/useAuth.js';
   const router = useRouter();
 
-  const menuItems =[
-    {
-      label: 'Accueil',
-      command:() => router.push({name:'home'}),
-      icon: 'pi pi-home',
-    },
-    {
-      label:'Login',
-      command:() => router.push({name:'login'}),
-      icon:'pi pi-user',
-    },
-    {
-      label:'Swagger',
-      command:() => router.push({name:'swagger'}),
-      icon:'pi pi-cog',
-    }
-  ];
+  const { isAuth,userInfo,logout } = useAuth();
+  
+  const getMenuItems = () =>{
+    if(isAuth.value){
+      return [
+        {
+          label: 'Accueil',
+          command:() => router.push({name:'home'}),
+          icon: 'pi pi-home',
+        },
+        {
+          label:'Logout',
+          command:() => logout(),
+          icon:'pi pi-sign-out',
+        },
+        {
+          label:userInfo.value ? userInfo.value.username : 'Profil',
+          command:() => router.push({name:'login'}),
+          icon:'pi pi-user',
+        },
+        {
+          label:'Swagger',
+          command:() => router.push({name:'swagger'}),
+          icon:'pi pi-cog',
+        },
+      ];
+      } else {
+          return [
+          {
+            label: 'Accueil',
+            command:() => router.push({name:'home'}),
+            icon: 'pi pi-home',
+          },
+          {
+            label:'Register/Login',
+            command:() => router.push({name:'login'}),
+            icon:'pi pi-user',
+          },
+          {
+            label:'Swagger',
+            command:() => router.push({name:'swagger'}),
+            icon:'pi pi-cog',
+          },
+        ];
+        }
+      };
 </script>
 
 <template>
   <h1>Hello App!</h1>
   <Toast />
   <p><strong>Current route path:</strong> {{ $route.fullPath }}</p>
-  <Menubar :model="menuItems" />
+  <Menubar :model="getMenuItems()" />
   <RouterView />
   </template>

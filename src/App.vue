@@ -4,6 +4,10 @@
   import { useRouter } from 'vue-router';
   import Toast from 'primevue/toast';
   import { useAuth } from './composables/useAuth.js';
+
+  import { useToast } from 'primevue/usetoast';
+
+  const toast = useToast();
   const router = useRouter();
 
   const { isAuth,userInfo,logout } = useAuth();
@@ -28,7 +32,10 @@
         },
         {
           label:'Logout',
-          command:() => logout(),
+          command:() => {
+            logout();
+            toast.add({severity:'success',summary:'Déconnexion',life:2500,detail:'Vous avez été déconnecté.'});
+          },
           icon:'pi pi-sign-out',
         },
       ];
@@ -55,9 +62,8 @@
 </script>
 
 <template>
-  <h1>Hello App!</h1>
+  <h1>StockSeeker</h1>
   <Toast />
-  <p><strong>Current route path:</strong> {{ $route.fullPath }}</p>
   <Menubar :model="getMenuItems()" />
   <RouterView />
   </template>

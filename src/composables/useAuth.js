@@ -1,7 +1,6 @@
 import { ref, onMounted } from 'vue';
 import { getuserinfo } from '../api.js';
 import Cookies from 'js-cookie';
-
 const isAuth = ref(false);
 const userInfo = ref(null);
 

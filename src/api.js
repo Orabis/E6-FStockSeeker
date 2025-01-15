@@ -33,6 +33,12 @@ export const loginUser = async (userData) => {
     return response.data;
 };
 
+export const updateUser = async (userData) => {
+    const response = await api.put('/users/me/', userData, {
+        headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+    });
+    return response.data;
+}
 export const getuserinfo = async () => {
     const response = await api.get('/users/me/', {
         headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},

@@ -7,6 +7,9 @@ const routes = [
     path: '/',
     name: 'home',
     component: HomeView,
+    meta: {
+      requireAuth: true,
+    },
   },
   {
     path: '/login',
@@ -25,4 +28,10 @@ const router = createRouter({
   routes,
 });
 
+router.beforeEach(async (to,from,next) => {
+  const isAuthenticate = sessionStorage.getItem('access_token');
+  if (to.meta.requireAuth && !isAuthenticate || isAuthenticate === 'undefined' || isAuthenticate === 'null') {
+    next({name: 'login'});
+  } else next();
+  })
 export default router;

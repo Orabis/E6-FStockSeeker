@@ -45,6 +45,14 @@ export const getuserinfo = async () => {
     });
     return response.data;
 };
+
+export const createProduct = async (productData) => {
+    const response = await api.post('/products/', productData, {
+        headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+});
+    return response.data;
+};
+
 const refreshAccessToken = async () => {
   try {
     const response = await api.post('/token/refresh', {'refresh': Cookies.get('refresh')}, {

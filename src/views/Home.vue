@@ -1,7 +1,7 @@
 <script setup>
-import { createProduct } from '../api.js';
+import { createProduct,getProducts } from '../api.js';
 import { useToast } from 'primevue/usetoast';
-
+import { DateTime } from 'luxon';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import PMessage from 'primevue/message';
@@ -9,18 +9,19 @@ import InputNumber from 'primevue/inputnumber';
 import InputGroup from 'primevue/inputgroup';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import Checkbox from 'primevue/checkbox';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 
-
-import { ref } from 'vue';
-
+import { ref, onMounted} from 'vue';
 const toast = useToast();
+const formatDate = (date) => DateTime.fromISO(date).toLocaleString(DateTime.DATETIME_MED);
 
+const products = ref([]);
 const productName = ref('');
 const productDescription = ref('');
 const productQuantity = ref('');
 const productAlert = ref(false);
 const productStockLimit = ref(null);
-
 const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',});
 
 async function create_product() {
@@ -37,6 +38,7 @@ async function create_product() {
       alert_enabled: productAlert.value,
       stock_limit: productStockLimit.value,
     })
+    products.value = await getProducts();
     toast.add({ severity: 'success', life: 2500, summary:`${productName.value} crée`});
 } catch (error){
     if (error.response && error.response.data) {
@@ -64,6 +66,24 @@ async function create_product() {
     }
   }
 }
+onMounted(async () => {
+try {
+  products.value = await getProducts();
+  products.value.forEach((product) => {
+    product.creation_date = formatDate(product.creation_date);
+    product.modification_date = formatDate(product.modification_date);
+  });
+} catch (error){
+  if (error.response && error.response.data) {
+    const data = error.response.data;
+    if (data.detail) {
+      toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: data.detail });
+    }
+  } else {
+    toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
+  }
+}
+});
 </script>
 
 <template>
@@ -117,5 +137,15 @@ async function create_product() {
         <Button label="Créer" type="submit" class="p-button-primary" />
       </form>
     </div>
+
+    <DataTable :value="products" tableStyle="min-width: 50rem">
+      <Column field="name" header="Name"></Column>
+      <Column field="description" header="description"></Column>
+      <Column field="quantity" header="Quantity"></Column>
+      <Column field="is_stock_low" header="is_stock_low"></Column>
+      <Column field="creation_date" header="creation_date"></Column>
+      <Column field="modification_date" header="modification_date"></Column>
+  </DataTable>
+
   </template>
   

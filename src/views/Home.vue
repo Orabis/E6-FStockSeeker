@@ -25,7 +25,7 @@ const productQuantity = ref('');
 const productAlert = ref(false);
 const productStockLimit = ref(null);
 const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',});
-
+const editingRows = ref([]);
 async function create_product() {
   registerErrors.value = {name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',};
   if (productAlert.value && !productStockLimit.value) {
@@ -68,14 +68,20 @@ async function create_product() {
     }
   }
 }
-async function editProduct(product){
-  console.log(product);
+async function onRowEditSave(event) {
+  if (event && event.data) {
+    const editedRow = event.data;
+    console.log(editedRow);
+  } else {
+    console.error("Event or event.data is undefined.");
+    toast.add({ severity: 'error', life: 2500, summary: 'Error', detail: 'Aucune donnée n\'a été modifiée.' });
+  }
 }
 const stockSeverity = (data) => {
   if (!data) return 'info';
   
   const quantity = data.quantity;
-
+  
   if (quantity <= 5) {
     return 'danger';
   } else if (quantity > 5 && quantity <= 20) {
@@ -151,11 +157,11 @@ try {
             {{ registerErrors.stock_limit }}
           </p-message>
         </div>
-  
         <Button label="Créer" type="submit" class="p-button-primary" />
       </form>
     </div>
-    <DataTable :value="products" tableStyle="min-width: 50rem" removableSort >
+
+    <DataTable v-model:editingRows="editingRows" editMode="row" dataKey="id" @row-edit-save="onRowEditSave" :value="products" tableStyle="min-width: 50rem" removableSort >
       <template #header>
         <div class="text-end pb-4">
             <Button icon="pi pi-external-link" label="Export" @click="exportCSV($event)" />
@@ -166,18 +172,25 @@ try {
           <Tag :severity="!slotProps.data.alert_enabled ? 'info' : (slotProps.data.is_stock_low ? 'danger' : 'success')" :value="!slotProps.data.alert_enabled ? 'NOALARMSET' : (slotProps.data.is_stock_low ? 'LOWSTOCK' : 'INSTOCK')"/>
         </template>
       </Column>
-      <Column field="name" header="Name" sortable></Column>
-      <Column field="description" header="description"></Column>
+      <Column field="name" header="Name" sortable>
+        <template #editor="{data, field}">
+          <InputText v-model="data[field]" fluid />
+        </template>
+      </Column>
+      <Column field="description" header="description">
+        <template #editor="{data, field}">
+          <InputText v-model="data[field]" fluid />
+        </template>
+      </Column>
       <Column field="quantity" header="Quantity" sortable>
         <template #body="slotProps">
           <Badge :value="slotProps.data.quantity" :severity="stockSeverity(slotProps.data)"/>
         </template>
-      </Column>
-      <Column>
-        <template #body="slotProps">
-          <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editProduct(slotProps.data)" label="Modifier"/>
+        <template #editor="{data, field}">
+          <InputNumber v-model="data[field]" fluid />
         </template>
       </Column>
+      <Column :rowEditor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
   </DataTable>
 </template>
   

@@ -60,6 +60,13 @@ export const getProducts = async () => {
   return response.data;
 };
 
+export const modifyProduct = async (productData, id) => {
+  const response = await api.patch(`/products/${id}/`, productData, {
+      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+});
+return response.data;
+};
+
 const refreshAccessToken = async () => {
   try {
     const response = await api.post('/token/refresh', {'refresh': Cookies.get('refresh')}, {

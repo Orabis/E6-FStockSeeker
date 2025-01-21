@@ -1,5 +1,5 @@
 <script setup>
-import { createProduct,getProducts } from '../api.js';
+import { createProduct,getProducts,modifyProduct } from '../api.js';
 import { useToast } from 'primevue/usetoast';
 import { DateTime } from 'luxon';
 import InputText from 'primevue/inputtext';
@@ -21,11 +21,12 @@ const formatDate = (date) => DateTime.fromISO(date).toLocaleString(DateTime.DATE
 const products = ref([]);
 const productName = ref('');
 const productDescription = ref('');
-const productQuantity = ref('');
+const productQuantity = ref('0');
 const productAlert = ref(false);
 const productStockLimit = ref(null);
 const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',});
 const editingRows = ref([]);
+
 async function create_product() {
   registerErrors.value = {name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',};
   if (productAlert.value && !productStockLimit.value) {
@@ -70,9 +71,36 @@ async function create_product() {
 }
 async function onRowEditSave(event) {
   if (event && event.data) {
-    const editedRow = event.data;
-    console.log(editedRow);
-  } else {
+    let {newData, index} = event;
+    products.value[index] = newData;
+
+    console.log(newData);
+    if (!newData.id) {
+      console.error("No id found in edited row.");
+      toast.add({ severity: 'error', life: 2500, summary: 'Error', detail: 'Aucune donnée n\'a été modifiée.' });
+      return;
+    }
+    try {
+      await modifyProduct({
+        id: newData.id,
+        name: newData.name,
+        description: newData.description,
+        quantity: newData.quantity,
+      }, 
+      newData.id);
+      products.value = await getProducts();
+      toast.add({ severity: 'success', life: 2500, summary: 'Succès', detail: 'Produit modifié.' });
+    } catch (error) {
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+        if (data.detail) {
+          toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: data.detail });
+        }
+      } else {
+        toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
+      }
+  };
+    } else {
     console.error("Event or event.data is undefined.");
     toast.add({ severity: 'error', life: 2500, summary: 'Error', detail: 'Aucune donnée n\'a été modifiée.' });
   }
@@ -111,6 +139,7 @@ try {
 </script>
 
 <template>
+  <div>
     <h2>Tableau de bord</h2>
     <div class="register form-container">
       <h2>Créer un produit</h2>
@@ -118,19 +147,34 @@ try {
         <div class="form">
           <InputGroup>
             <InputGroupAddon>Nom :</InputGroupAddon>
-            <InputText type="text" id="register-product" v-model="productName" required />
+            <InputText
+              type="text"
+              id="register-product"
+              v-model="productName"
+              required
+            />
           </InputGroup>
-          <p-message v-if="registerErrors.name" severity="error">
+          <p-message
+            v-if="registerErrors.name"
+            severity="error"
+          >
             {{ registerErrors.name }}
           </p-message>
         </div>
-  
+
         <div class="form">
           <InputGroup>
             <InputGroupAddon>Description :</InputGroupAddon>
-            <InputText type="text" id="register-description" v-model="productDescription" />
+            <InputText
+              type="text"
+              id="register-description"
+              v-model="productDescription"
+            />
           </InputGroup>
-          <p-message v-if="registerErrors.description" severity="error">
+          <p-message
+            v-if="registerErrors.description"
+            severity="error"
+          >
             {{ registerErrors.description }}
           </p-message>
         </div>
@@ -138,59 +182,123 @@ try {
         <div class="form">
           <InputGroup>
             <InputGroupAddon>Quantité :</InputGroupAddon>
-            <InputNumber id="register-quantity" inputId="integeronly" v-model="productQuantity" fluid required />
+            <InputNumber
+              id="register-quantity"
+              inputId="integeronly"
+              v-model="productQuantity"
+              fluid
+              required
+            />
           </InputGroup>
-          <p-message v-if="registerErrors.quantity" severity="error">
+          <p-message
+            v-if="registerErrors.quantity"
+            severity="error"
+          >
             {{ registerErrors.quantity }}
           </p-message>
         </div>
 
         <div class="form">
           <InputGroup>
-            <InputGroupAddon>Activer une alerte ?<Checkbox  type="text" :binary="true" id="register-alert" v-model="productAlert" /></InputGroupADdon>
-            <InputNumber v-if="productAlert" id="register-stock-limit" inputId="integeronly" v-model="productStockLimit" fluid/>
+            <InputGroupAddon>
+              Activer une alerte ?
+              <Checkbox
+                :binary="true"
+                id="register-alert"
+                v-model="productAlert"
+              />
+            </InputGroupAddon>
+            <InputNumber
+              v-if="productAlert"
+              id="register-stock-limit"
+              inputId="integeronly"
+              v-model="productStockLimit"
+              fluid
+            />
           </InputGroup>
-          <p-message v-if="registerErrors.alert_enabled" severity="error">
+          <p-message
+            v-if="registerErrors.alert_enabled"
+            severity="error"
+          >
             {{ registerErrors.alert_enabled }}
           </p-message>
-          <p-message v-if="registerErrors.stock_limit" severity="error">
+          <p-message
+            v-if="registerErrors.stock_limit"
+            severity="error"
+          >
             {{ registerErrors.stock_limit }}
           </p-message>
         </div>
-        <Button label="Créer" type="submit" class="p-button-primary" />
+
+        <Button
+          label="Créer"
+          type="submit"
+          class="p-button-primary"
+        />
       </form>
     </div>
 
-    <DataTable v-model:editingRows="editingRows" editMode="row" dataKey="id" @row-edit-save="onRowEditSave" :value="products" tableStyle="min-width: 50rem" removableSort >
+    <DataTable
+      v-model:editingRows="editingRows"
+      editMode="row"
+      dataKey="id"
+      @row-edit-save="onRowEditSave"
+      :value="products"
+      tableStyle="min-width: 50rem"
+      removableSort
+    >
       <template #header>
         <div class="text-end pb-4">
-            <Button icon="pi pi-external-link" label="Export" @click="exportCSV($event)" />
+          <Button
+            icon="pi pi-external-link"
+            label="Export"
+            @click="exportCSV($event)"
+          />
         </div>
-    </template>
+      </template>
+
       <Column field="is_stock_low" header="Stock" sortable>
         <template #body="slotProps">
-          <Tag :severity="!slotProps.data.alert_enabled ? 'info' : (slotProps.data.is_stock_low ? 'danger' : 'success')" :value="!slotProps.data.alert_enabled ? 'NOALARMSET' : (slotProps.data.is_stock_low ? 'LOWSTOCK' : 'INSTOCK')"/>
+          <Tag
+            :severity="slotProps.data.is_stock_low
+              ? 'danger'
+              : 'success'"
+            :value="slotProps.data.is_stock_low
+              ? 'LOWSTOCK'
+              : 'INSTOCK'"
+          />
         </template>
       </Column>
-      <Column field="name" header="Name" sortable>
-        <template #editor="{data, field}">
-          <InputText v-model="data[field]" fluid />
+
+      <Column field="name" header="Name" editor="true" sortable>
+        <template #editor="slotProps">
+          <InputText v-model="slotProps.data.name" fluid />
         </template>
       </Column>
-      <Column field="description" header="description">
-        <template #editor="{data, field}">
-          <InputText v-model="data[field]" fluid />
+
+      <Column field="description" header="Description" editor="true">
+        <template #editor="slotProps">
+          <InputText v-model="slotProps.data.description" fluid />
         </template>
       </Column>
-      <Column field="quantity" header="Quantity" sortable>
+
+      <Column field="quantity" header="Quantity" editor="true" sortable>
         <template #body="slotProps">
-          <Badge :value="slotProps.data.quantity" :severity="stockSeverity(slotProps.data)"/>
+          <Badge
+            :value="slotProps.data.quantity"
+            :severity="stockSeverity(slotProps.data)"
+          />
         </template>
-        <template #editor="{data, field}">
-          <InputNumber v-model="data[field]" fluid />
+        <template #editor="slotProps">
+          <InputNumber v-model="slotProps.data.quantity" fluid />
         </template>
       </Column>
-      <Column :rowEditor="true" style="width: 10%; min-width: 8rem" bodyStyle="text-align:center"></Column>
-  </DataTable>
+
+      <Column
+        :rowEditor="true"
+        style="width: 10%; min-width: 8rem"
+        bodyStyle="text-align:center"
+      ></Column>
+    </DataTable>
+  </div>
 </template>
-  

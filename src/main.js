@@ -3,7 +3,7 @@ import './style.css'
 import App from './app.vue'
 
 import PrimeVue from 'primevue/config';
-import Aura from '@primevue/themes/material';
+import Aura from '@primevue/themes/aura';
 import router from "./router"
 import 'primeicons/primeicons.css'
 import ToastService from 'primevue/toastservice';

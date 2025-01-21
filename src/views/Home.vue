@@ -11,6 +11,8 @@ import InputGroupAddon from 'primevue/inputgroupaddon';
 import Checkbox from 'primevue/checkbox';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Tag from 'primevue/tag';
+import Badge from 'primevue/badge';
 
 import { ref, onMounted} from 'vue';
 const toast = useToast();
@@ -66,6 +68,22 @@ async function create_product() {
     }
   }
 }
+async function editProduct(product){
+  console.log(product);
+}
+const stockSeverity = (data) => {
+  if (!data) return 'info';
+  
+  const quantity = data.quantity;
+
+  if (quantity <= 5) {
+    return 'danger';
+  } else if (quantity > 5 && quantity <= 20) {
+    return 'success';
+  } else {
+    return 'warning';
+  }
+};
 onMounted(async () => {
 try {
   products.value = await getProducts();
@@ -137,15 +155,29 @@ try {
         <Button label="Créer" type="submit" class="p-button-primary" />
       </form>
     </div>
-
-    <DataTable :value="products" tableStyle="min-width: 50rem">
-      <Column field="name" header="Name"></Column>
+    <DataTable :value="products" tableStyle="min-width: 50rem" removableSort >
+      <template #header>
+        <div class="text-end pb-4">
+            <Button icon="pi pi-external-link" label="Export" @click="exportCSV($event)" />
+        </div>
+    </template>
+      <Column field="is_stock_low" header="Stock" sortable>
+        <template #body="slotProps">
+          <Tag :severity="!slotProps.data.alert_enabled ? 'info' : (slotProps.data.is_stock_low ? 'danger' : 'success')" :value="!slotProps.data.alert_enabled ? 'NOALARMSET' : (slotProps.data.is_stock_low ? 'LOWSTOCK' : 'INSTOCK')"/>
+        </template>
+      </Column>
+      <Column field="name" header="Name" sortable></Column>
       <Column field="description" header="description"></Column>
-      <Column field="quantity" header="Quantity"></Column>
-      <Column field="is_stock_low" header="is_stock_low"></Column>
-      <Column field="creation_date" header="creation_date"></Column>
-      <Column field="modification_date" header="modification_date"></Column>
+      <Column field="quantity" header="Quantity" sortable>
+        <template #body="slotProps">
+          <Badge :value="slotProps.data.quantity" :severity="stockSeverity(slotProps.data)"/>
+        </template>
+      </Column>
+      <Column>
+        <template #body="slotProps">
+          <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editProduct(slotProps.data)" label="Modifier"/>
+        </template>
+      </Column>
   </DataTable>
-
-  </template>
+</template>
   

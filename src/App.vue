@@ -35,6 +35,7 @@
           command:() => {
             logout();
             toast.add({severity:'success',summary:'Déconnexion',life:2500,detail:'Vous avez été déconnecté.'});
+            router.push({name:'login'});
           },
           icon:'pi pi-sign-out',
         },

@@ -67,6 +67,40 @@ export const modifyProduct = async (productData, id) => {
 return response.data;
 };
 
+export const deleteProduct = async (id) => {
+  const response = await api.delete(`/products/${id}/`, {
+      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+});
+return response.data;
+};
+
+export const getWarehouses = async () => {
+  const response = await api.get('/warehouses/', {
+      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+});
+  return response.data;
+};
+
+export const createWarehouse = async (warehouseData) => {
+  const response = await api.post('/warehouses/', warehouseData, {
+      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+});
+  return response.data;
+}
+
+export const modifyWarehouse = async (warehouseData, id) => {
+  const response = await api.patch(`/warehouses/${id}/`, warehouseData, {
+      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+});
+  return response.data;
+};
+
+export const deleteWarehouse = async (id) => {
+  const response = await api.delete(`/warehouses/${id}/`, {
+      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+});
+  return response.data;
+};
 const refreshAccessToken = async () => {
   try {
     const response = await api.post('/token/refresh', {'refresh': Cookies.get('refresh')}, {

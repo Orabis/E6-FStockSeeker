@@ -1,5 +1,5 @@
 <script setup>
-import { createProduct,getProducts,modifyProduct } from '../api.js';
+import { createProduct,getProducts,modifyProduct,deleteProduct } from '../api.js';
 import { useToast } from 'primevue/usetoast';
 import { DateTime } from 'luxon';
 import InputText from 'primevue/inputtext';
@@ -77,7 +77,6 @@ async function onRowEditSave(event) {
     let {newData, index} = event;
     products.value[index] = newData;
 
-    console.log(newData);
     if (!newData.id) {
       console.error("No id found in edited row.");
       toast.add({ severity: 'error', life: 2500, summary: 'Error', detail: 'Aucune donnée n\'a été modifiée.' });
@@ -108,6 +107,24 @@ async function onRowEditSave(event) {
     toast.add({ severity: 'error', life: 2500, summary: 'Error', detail: 'Aucune donnée n\'a été modifiée.' });
   }
 }
+
+async function removeProduct(id) {
+  try {
+    await deleteProduct(id);
+    products.value = await getProducts();
+    toast.add({ severity: 'success', life: 2500, summary: 'Succès', detail: 'Produit supprimé.' });
+  } catch (error) {
+    if (error.response && error.response.data) {
+      const data = error.response.data;
+      if (data.detail) {
+        toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: data.detail });
+      }
+    } else {
+      toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
+    }
+  }
+};
+
 const stockSeverity = (data) => {
   if (!data) return 'info';
   
@@ -337,12 +354,20 @@ try {
           <InputNumber v-model="slotProps.data.quantity" fluid />
         </template>
       </Column>
-
+      <Column editor="true">
+        <template #editor="slotProps">
+          <Button
+            icon="pi pi-times"
+            class="p-button-rounded p-button-danger"
+            @click="removeProduct(slotProps.data.id)"
+          />
+        </template>
+      </Column>
       <Column
         :rowEditor="true"
         style="width: 10%; min-width: 8rem"
         bodyStyle="text-align:center"
-      ></Column>
+      />
     </DataTable>
   </div>
 </template>

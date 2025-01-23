@@ -16,8 +16,18 @@
     if(isAuth.value){
       return [
         {
-          label: 'Accueil',
-          command:() => router.push({name:'home'}),
+          label: 'Tableau de Bord',
+          command:() => router.push({name:'dashboard'}),
+          icon: 'pi pi-home',
+        },
+        {
+          label: 'Gerer les produits',
+          command:() => router.push({name:'products'}),
+          icon: 'pi pi-home',
+        },
+        {
+          label: 'Gerer les entrepôts',
+          command:() => router.push({name:'warehouses'}),
           icon: 'pi pi-home',
         },
         {

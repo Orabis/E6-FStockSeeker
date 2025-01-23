@@ -1,12 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/Home.vue';
+import ProductsView from '../views/Products.vue';
 import SwaggerView from '../views/Swagger.vue';
 import LoginView from '../views/Login.vue';
+import DashboardView from '../views/Dashboard.vue';
+import WarehousesView from '../views/Warehouses.vue';
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView,
+    name: 'dashboard',
+    component: DashboardView,
+    meta: {
+      requireAuth: true,
+    },
+  },
+  {
+    path: '/products',
+    name: 'products',
+    component: ProductsView,
+    meta: {
+      requireAuth: true,
+    },
+  },
+  {
+    path: '/warehouses',
+    name: 'warehouses',
+    component: WarehousesView,
     meta: {
       requireAuth: true,
     },

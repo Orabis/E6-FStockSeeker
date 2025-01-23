@@ -13,6 +13,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
+import FileUpload from 'primevue/fileupload';
 
 import { ref, onMounted} from 'vue';
 const toast = useToast();
@@ -24,6 +25,7 @@ const productDescription = ref('');
 const productQuantity = ref('0');
 const productAlert = ref(false);
 const productStockLimit = ref(null);
+const base64Image = ref(null);
 const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',});
 const editingRows = ref([]);
 
@@ -40,7 +42,8 @@ async function create_product() {
       quantity: productQuantity.value,
       alert_enabled: productAlert.value,
       stock_limit: productStockLimit.value,
-    })
+      image: base64Image.value,
+    });
     products.value = await getProducts();
     toast.add({ severity: 'success', life: 2500, summary:`${productName.value} crée`});
 } catch (error){
@@ -118,6 +121,21 @@ const stockSeverity = (data) => {
     return 'warning';
   }
 };
+
+const handleFileUpload = (event) => {
+  const file = event.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    base64Image.value = reader.result;
+    toast.add({ severity: 'success', life: 2500, summary: 'Image ajouté avec succès.' });
+  };
+  reader.onerror = () => {
+    toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: 'Impossible de lire le fichier.' });
+  };
+  reader.readAsDataURL(file);
+};
+
 onMounted(async () => {
 try {
   products.value = await getProducts();
@@ -216,6 +234,24 @@ try {
               fluid
             />
           </InputGroup>
+        </div>
+          <div class="form">
+            <InputGroup >
+              <InputGroupAddon>Image :</InputGroupAddon>
+              <FileUpload
+              name="productImage"
+              accept="image/*" 
+              mode="basic"
+              customUpload
+              :auto="true"
+              :multiple="false"
+              :maxFileSize="1000000"
+              :chooseLabel="'Choisir une image'"
+              @uploader="handleFileUpload" 
+              />
+            </InputGroup>
+        </div>
+        <div class="alert">
           <p-message
             v-if="registerErrors.alert_enabled"
             severity="error"
@@ -229,8 +265,7 @@ try {
             {{ registerErrors.stock_limit }}
           </p-message>
         </div>
-
-        <Button
+                <Button
           label="Créer"
           type="submit"
           class="p-button-primary"
@@ -256,6 +291,15 @@ try {
           />
         </div>
       </template>
+
+      <Column field="image">
+        <template #body="slotProps">
+          <img
+            :src="slotProps.data.image"
+            style="width: 6rem"
+          />
+        </template>
+      </Column>
 
       <Column field="is_stock_low" header="Stock" sortable>
         <template #body="slotProps">

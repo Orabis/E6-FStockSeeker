@@ -53,7 +53,7 @@ export const createProduct = async (productData) => {
     return response.data;
 };
 
-export const getProducts = async () => {
+export const  getProducts = async () => {
   const response = await api.get('/products/', {
       headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
 });

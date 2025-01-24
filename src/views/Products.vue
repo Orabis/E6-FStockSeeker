@@ -1,5 +1,5 @@
 <script setup>
-import { createProduct,getProducts,modifyProduct,deleteProduct } from '../api.js';
+import { createProduct,getProducts,modifyProduct,deleteProduct,getWarehouses } from '../api.js';
 import { useToast } from 'primevue/usetoast';
 import { DateTime } from 'luxon';
 import InputText from 'primevue/inputtext';
@@ -14,6 +14,7 @@ import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import FileUpload from 'primevue/fileupload';
+import MultiSelect from 'primevue/multiselect';
 
 import { ref, onMounted} from 'vue';
 const toast = useToast();
@@ -26,8 +27,10 @@ const productQuantity = ref('0');
 const productAlert = ref(false);
 const productStockLimit = ref(null);
 const base64Image = ref(null);
-const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',});
+const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',image:'',warehouse:''});
 const editingRows = ref([]);
+const selectedWarehouses = ref([]);
+const warehouses = ref([]);
 
 async function create_product() {
   registerErrors.value = {name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',};
@@ -43,8 +46,10 @@ async function create_product() {
       alert_enabled: productAlert.value,
       stock_limit: productStockLimit.value,
       image: base64Image.value,
+      warehouse: selectedWarehouses.value.map((warehouse) => warehouse.id),
     });
     products.value = await getProducts();
+    retrieveWarehousesNames();
     toast.add({ severity: 'success', life: 2500, summary:`${productName.value} crée`});
 } catch (error){
     if (error.response && error.response.data) {
@@ -53,19 +58,25 @@ async function create_product() {
         toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: data.detail });
       }
       if (data.username) {
-        loginErrors.value.name = data.name[0];
+        registerErrors.value.name = data.name[0];
       }
       if (data.description) {
-        loginErrors.value.description = data.description[0];
+        registerErrors.value.description = data.description[0];
       }
       if (data.quantity) {
-        loginErrors.value.quantity = data.quantity[0];
+        registerErrors.value.quantity = data.quantity[0];
       }
       if (data.alert_enabled) {
-        loginErrors.value.alert_enabled = data.alert_enabled[0];
+        registerErrors.value.alert_enabled = data.alert_enabled[0];
       }
       if (data.stock_limit) {
-        loginErrors.value.stock_limit = data.stock_limit[0];
+        registerErrors.value.stock_limit = data.stock_limit[0];
+      }
+      if (data.image) {
+        registerErrors.value.image = data.image[0];
+      }
+      if (data.warehouse) {
+        registerErrors.value.warehouse = data.warehouse[0];
       }
     } else {
       toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
@@ -125,6 +136,24 @@ async function removeProduct(id) {
   }
 };
 
+const retrieveWarehousesNames = () => {
+  try {
+    if (!Array.isArray(products.value) || !Array.isArray(warehouses.value)) {
+      throw new Error('Products or warehouses are not arrays.');
+    }
+    for (const product of products.value) {
+      product.warehouse_names = product.warehouse.map((warehouseId) => {
+        const warehouse = warehouses.value.find(w => w.id === warehouseId);
+        return warehouse ? warehouse.name : 'Inconnu';
+      }).join(',');
+    }
+  } catch (error) {
+    console.error(error);
+    toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: 'Erreur entrepôt', error });
+  }
+};
+
+
 const stockSeverity = (data) => {
   if (!data) return 'info';
   
@@ -155,11 +184,13 @@ const handleFileUpload = (event) => {
 
 onMounted(async () => {
 try {
+  warehouses.value = await getWarehouses();
   products.value = await getProducts();
   products.value.forEach((product) => {
-    product.creation_date = formatDate(product.creation_date);
-    product.modification_date = formatDate(product.modification_date);
+  product.creation_date = formatDate(product.creation_date);
+  product.modification_date = formatDate(product.modification_date);
   });
+  retrieveWarehousesNames();
 } catch (error){
   if (error.response && error.response.data) {
     const data = error.response.data;
@@ -268,18 +299,38 @@ try {
               />
             </InputGroup>
         </div>
+        <div class="form">
+          <InputGroup>
+              <InputGroupAddon>Entrepôt :</InputGroupAddon>
+              <MultiSelect
+                v-model="selectedWarehouses"
+                :options="warehouses"
+                optionLabel="name"
+                placeholder="Sélectionner un entrepôt"
+                display="chip"
+                ></MultiSelect>
+          </InputGroup>
+        </div>
         <div class="alert">
           <p-message
             v-if="registerErrors.alert_enabled"
-            severity="error"
-          >
+            severity="error">
             {{ registerErrors.alert_enabled }}
           </p-message>
           <p-message
             v-if="registerErrors.stock_limit"
-            severity="error"
-          >
+            severity="error">
             {{ registerErrors.stock_limit }}
+          </p-message>
+          <p-message
+            v-if="registerErrors.image"
+            severity="error">
+            {{ registerErrors.image }}
+          </p-message>
+          <p-message
+            v-if="registerErrors.warehouse"
+            severity="error">
+            {{ registerErrors.warehouse }}
           </p-message>
         </div>
                 <Button
@@ -354,6 +405,7 @@ try {
           <InputNumber v-model="slotProps.data.quantity" fluid />
         </template>
       </Column>
+      <Column field="warehouse_names" header="Entrepôt" sortable />
       <Column editor="true">
         <template #editor="slotProps">
           <Button

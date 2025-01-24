@@ -84,6 +84,7 @@ async function login_user() {
     }
   }
 }
+
 async function modify_user() {
   modifyErrors.value = { username: '', email: '', password: '' };
   try {

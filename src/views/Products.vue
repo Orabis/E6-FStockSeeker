@@ -1,7 +1,9 @@
 <script setup>
+import { ref, onMounted} from 'vue';
 import { createProduct,getProducts,modifyProduct,deleteProduct,getWarehouses } from '../api.js';
 import { useToast } from 'primevue/usetoast';
 import { DateTime } from 'luxon';
+
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import PMessage from 'primevue/message';
@@ -16,7 +18,6 @@ import Badge from 'primevue/badge';
 import FileUpload from 'primevue/fileupload';
 import MultiSelect from 'primevue/multiselect';
 
-import { ref, onMounted} from 'vue';
 const toast = useToast();
 const formatDate = (date) => DateTime.fromISO(date).toLocaleString(DateTime.DATETIME_MED);
 
@@ -27,13 +28,13 @@ const productQuantity = ref('0');
 const productAlert = ref(false);
 const productStockLimit = ref(null);
 const base64Image = ref(null);
-const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',image:'',warehouse:''});
+const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',image:'',warehouse_ids:''});
 const editingRows = ref([]);
 const selectedWarehouses = ref([]);
 const warehouses = ref([]);
 
 async function create_product() {
-  registerErrors.value = {name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',};
+  registerErrors.value = {name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',warehouse_ids:''};
   if (productAlert.value && !productStockLimit.value) {
     registerErrors.value.stock_limit = 'Veuillez renseigner une limite de stock.';
     return;
@@ -46,10 +47,10 @@ async function create_product() {
       alert_enabled: productAlert.value,
       stock_limit: productStockLimit.value,
       image: base64Image.value,
-      warehouse: selectedWarehouses.value.map((warehouse) => warehouse.id),
+      warehouse_ids: selectedWarehouses.value.map((warehouse) => warehouse.id),
     });
     products.value = await getProducts();
-    retrieveWarehousesNames();
+    products.value = enrichProducts();
     toast.add({ severity: 'success', life: 2500, summary:`${productName.value} crée`});
 } catch (error){
     if (error.response && error.response.data) {
@@ -75,8 +76,8 @@ async function create_product() {
       if (data.image) {
         registerErrors.value.image = data.image[0];
       }
-      if (data.warehouse) {
-        registerErrors.value.warehouse = data.warehouse[0];
+      if (data.warehouse_ids) {
+        registerErrors.value.warehouse_ids = data.warehouse_ids[0];
       }
     } else {
       toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
@@ -99,9 +100,11 @@ async function onRowEditSave(event) {
         name: newData.name,
         description: newData.description,
         quantity: newData.quantity,
+        warehouse_ids: newData.warehouse.map((warehouse) => warehouse.id),
       }, 
       newData.id);
       products.value = await getProducts();
+      products.value = enrichProducts();
       toast.add({ severity: 'success', life: 2500, summary: 'Succès', detail: 'Produit modifié.' });
     } catch (error) {
       if (error.response && error.response.data) {
@@ -123,6 +126,7 @@ async function removeProduct(id) {
   try {
     await deleteProduct(id);
     products.value = await getProducts();
+    products.value = enrichProducts();
     toast.add({ severity: 'success', life: 2500, summary: 'Succès', detail: 'Produit supprimé.' });
   } catch (error) {
     if (error.response && error.response.data) {
@@ -135,22 +139,17 @@ async function removeProduct(id) {
     }
   }
 };
+const enrichProducts = () => {
+   return products.value.map((product) => {
+    const attachedWarehouses = warehouses.value.filter((warehouse) =>
+      product.warehouse_ids.includes(warehouse.id)
+    );
 
-const retrieveWarehousesNames = () => {
-  try {
-    if (!Array.isArray(products.value) || !Array.isArray(warehouses.value)) {
-      throw new Error('Products or warehouses are not arrays.');
-    }
-    for (const product of products.value) {
-      product.warehouse_names = product.warehouse.map((warehouseId) => {
-        const warehouse = warehouses.value.find(w => w.id === warehouseId);
-        return warehouse ? warehouse.name : 'Inconnu';
-      }).join(',');
-    }
-  } catch (error) {
-    console.error(error);
-    toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: 'Erreur entrepôt', error });
-  }
+    return {
+      ...product,
+      warehouses: attachedWarehouses
+    };
+  });
 };
 
 
@@ -168,6 +167,12 @@ const stockSeverity = (data) => {
   }
 };
 
+const truncate = (text, length) => {
+  if (text.length > length) {
+    return text.substring(0, length) + '...';
+  }
+  return text;
+};
 const handleFileUpload = (event) => {
   const file = event.files[0];
   if (!file) return;
@@ -186,11 +191,11 @@ onMounted(async () => {
 try {
   warehouses.value = await getWarehouses();
   products.value = await getProducts();
+  products.value = enrichProducts();
   products.value.forEach((product) => {
   product.creation_date = formatDate(product.creation_date);
   product.modification_date = formatDate(product.modification_date);
   });
-  retrieveWarehousesNames();
 } catch (error){
   if (error.response && error.response.data) {
     const data = error.response.data;
@@ -389,6 +394,11 @@ try {
       </Column>
 
       <Column field="description" header="Description" editor="true">
+        <template #body="slotProps">
+          <span :title="slotProps.data.description">
+            {{ truncate(slotProps.data.description, 50) }}
+          </span>
+        </template>
         <template #editor="slotProps">
           <InputText v-model="slotProps.data.description" fluid />
         </template>
@@ -405,7 +415,22 @@ try {
           <InputNumber v-model="slotProps.data.quantity" fluid />
         </template>
       </Column>
-      <Column field="warehouse_names" header="Entrepôt" sortable />
+      <Column header="Entrepôt" editor="true" sortable> 
+        <template #body="slotProps">
+          <span v-for="warehouse in slotProps.data.warehouses" :key="warehouse.id">
+            {{ warehouse.name }},
+          </span>
+        </template>
+        <template #editor="slotProps">
+          <MultiSelect
+            v-model="slotProps.data.warehouse"
+            :options="warehouses"
+            optionLabel="name"
+            placeholder="Sélectionner un entrepôt"
+          ></MultiSelect>
+        </template>
+      </Column>
+
       <Column editor="true">
         <template #editor="slotProps">
           <Button

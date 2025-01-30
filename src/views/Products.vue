@@ -24,17 +24,18 @@ const formatDate = (date) => DateTime.fromISO(date).toLocaleString(DateTime.DATE
 const products = ref([]);
 const productName = ref('');
 const productDescription = ref('');
-const productQuantity = ref('0');
+const productQuantity = ref(0);
 const productAlert = ref(false);
 const productStockLimit = ref(null);
 const base64Image = ref(null);
-const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',image:'',warehouse_ids:''});
+const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',image:'',warehouses:''});
+const modifyErrors =  ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',image:'',warehouses:''});
 const editingRows = ref([]);
 const selectedWarehouses = ref([]);
 const warehouses = ref([]);
 
 async function create_product() {
-  registerErrors.value = {name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',warehouse_ids:''};
+  registerErrors.value = {name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',warehouses:''};
   if (productAlert.value && !productStockLimit.value) {
     registerErrors.value.stock_limit = 'Veuillez renseigner une limite de stock.';
     return;
@@ -47,8 +48,9 @@ async function create_product() {
       alert_enabled: productAlert.value,
       stock_limit: productStockLimit.value,
       image: base64Image.value,
-      warehouse_ids: selectedWarehouses.value.map((warehouse) => warehouse.id),
+      warehouses: selectedWarehouses.value.map((warehouse) => warehouse.id),
     });
+    warehouses.value = await getWarehouses();
     products.value = await getProducts();
     products.value = enrichProducts();
     toast.add({ severity: 'success', life: 2500, summary:`${productName.value} crée`});
@@ -58,7 +60,7 @@ async function create_product() {
       if (data.detail) {
         toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: data.detail });
       }
-      if (data.username) {
+      if (data.name) {
         registerErrors.value.name = data.name[0];
       }
       if (data.description) {
@@ -76,8 +78,8 @@ async function create_product() {
       if (data.image) {
         registerErrors.value.image = data.image[0];
       }
-      if (data.warehouse_ids) {
-        registerErrors.value.warehouse_ids = data.warehouse_ids[0];
+      if (data.warehouses) {
+        registerErrors.value.warehouses = data.warehouses[0];
       }
     } else {
       toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
@@ -85,6 +87,7 @@ async function create_product() {
   }
 }
 async function onRowEditSave(event) {
+  modifyErrors.value = { name: '', description: '', quantity: '', alert_enabled: '', stock_limit: '', image: '', warehouses: '' };
   if (event && event.data) {
     let {newData, index} = event;
     products.value[index] = newData;
@@ -100,31 +103,56 @@ async function onRowEditSave(event) {
         name: newData.name,
         description: newData.description,
         quantity: newData.quantity,
-        warehouse_ids: newData.warehouse.map((warehouse) => warehouse.id),
-      }, 
+        warehouses: newData.warehouse.map((warehouse) => warehouse.id),
+      },
       newData.id);
+      warehouses.value = await getWarehouses();
       products.value = await getProducts();
       products.value = enrichProducts();
       toast.add({ severity: 'success', life: 2500, summary: 'Succès', detail: 'Produit modifié.' });
-    } catch (error) {
+  } catch (error) {
       if (error.response && error.response.data) {
         const data = error.response.data;
         if (data.detail) {
-          toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: data.detail });
+          toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: data.detail });
+        }
+        if (data.name) {
+          modifyErrors.value.name = data.name[0];
+        }
+        if (data.description) {
+          modifyErrors.value.description = data.description[0];
+        }
+        if (data.quantity) {
+          modifyErrors.value.quantity = data.quantity[0];
+        }
+        if (data.alert_enabled) {
+          modifyErrors.value.alert_enabled = data.alert_enabled[0];
+        }
+        if (data.stock_limit) {
+          modifyErrors.value.stock_limit = data.stock_limit[0];
+        }
+        if (data.image) {
+          modifyErrors.value.image = data.image[0];
+        }
+        if (data.warehouses) {
+          modifyErrors.value.warehouses = data.warehouses[0];
         }
       } else {
         toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
       }
-  };
-    } else {
-    console.error("Event or event.data is undefined.");
-    toast.add({ severity: 'error', life: 2500, summary: 'Error', detail: 'Aucune donnée n\'a été modifiée.' });
+    }
   }
+}
+function onRowEditInit(event) {
+  const { data } = event;
+  data.warehouse = data.warehouses.map(warehouse => ({ ...warehouse }));
 }
 
 async function removeProduct(id) {
   try {
     await deleteProduct(id);
+    editingRows.value = [];
+    warehouses.value = await getWarehouses();
     products.value = await getProducts();
     products.value = enrichProducts();
     toast.add({ severity: 'success', life: 2500, summary: 'Succès', detail: 'Produit supprimé.' });
@@ -142,7 +170,7 @@ async function removeProduct(id) {
 const enrichProducts = () => {
    return products.value.map((product) => {
     const attachedWarehouses = warehouses.value.filter((warehouse) =>
-      product.warehouse_ids.includes(warehouse.id)
+      product.warehouses.includes(warehouse.id)
     );
 
     return {
@@ -333,9 +361,9 @@ try {
             {{ registerErrors.image }}
           </p-message>
           <p-message
-            v-if="registerErrors.warehouse"
+            v-if="registerErrors.warehouses"
             severity="error">
-            {{ registerErrors.warehouse }}
+            {{ registerErrors.warehouses }}
           </p-message>
         </div>
                 <Button
@@ -351,6 +379,7 @@ try {
       editMode="row"
       dataKey="id"
       @row-edit-save="onRowEditSave"
+      @row-edit-init="onRowEditInit"
       :value="products"
       tableStyle="min-width: 50rem"
       removableSort
@@ -388,6 +417,10 @@ try {
       </Column>
 
       <Column field="name" header="Name" editor="true" sortable>
+        <template #body="slotProps">
+          <span v-if="!modifyErrors.name">{{ slotProps.data.name }}</span>
+          <p-message v-if="modifyErrors.name" severity="error">{{ modifyErrors.name }}</p-message>
+        </template>
         <template #editor="slotProps">
           <InputText v-model="slotProps.data.name" fluid />
         </template>
@@ -395,9 +428,10 @@ try {
 
       <Column field="description" header="Description" editor="true">
         <template #body="slotProps">
-          <span :title="slotProps.data.description">
+          <span v-if="!modifyErrors.description" :title="slotProps.data.description">
             {{ truncate(slotProps.data.description, 50) }}
           </span>
+          <p-message v-if="modifyErrors.description" severity="error">{{ modifyErrors.description }}</p-message>
         </template>
         <template #editor="slotProps">
           <InputText v-model="slotProps.data.description" fluid />
@@ -406,10 +440,11 @@ try {
 
       <Column field="quantity" header="Quantity" editor="true" sortable>
         <template #body="slotProps">
-          <Badge
+          <Badge v-if="!modifyErrors.quantity"
             :value="slotProps.data.quantity"
             :severity="stockSeverity(slotProps.data)"
           />
+          <p-message v-if="modifyErrors.quantity" severity="error">{{ modifyErrors.quantity }}</p-message>
         </template>
         <template #editor="slotProps">
           <InputNumber v-model="slotProps.data.quantity" fluid />
@@ -417,9 +452,10 @@ try {
       </Column>
       <Column header="Entrepôt" editor="true" sortable> 
         <template #body="slotProps">
-          <span v-for="warehouse in slotProps.data.warehouses" :key="warehouse.id">
-            {{ warehouse.name }},
+          <span v-if="!modifyErrors.warehouses" v-for="warehouse in slotProps.data.warehouses" :key="warehouse.id">
+            {{ warehouse.name }}({{ warehouse.actual_capacity }}/{{ warehouse.max_capacity }}),
           </span>
+          <p-message v-if="modifyErrors.warehouses" severity="error">{{ modifyErrors.warehouses }}</p-message>
         </template>
         <template #editor="slotProps">
           <MultiSelect
@@ -427,6 +463,7 @@ try {
             :options="warehouses"
             optionLabel="name"
             placeholder="Sélectionner un entrepôt"
+
           ></MultiSelect>
         </template>
       </Column>

@@ -18,11 +18,12 @@ const warehouseName = ref('');
 const warehouseLocation = ref('');
 const warehouseMaxCapacity = ref(0);
 
-const registerErrors = ref({ name: '', location: '', max_capacity: '', products: '' });
+const registerErrors = ref({ name: '', location: '', max_capacity: ''});
+const modifyErrors = ref({name:'', location:'', max_capacity:''})
 const editingRows = ref([]);
 
 async function create_warehouse() {
-    registerErrors.value = { name: '', location: '', max_capacity: '', products: '' };
+    registerErrors.value = { name: '', location: '', max_capacity: ''};
     try {
         await createWarehouse({
             name: warehouseName.value,
@@ -53,6 +54,7 @@ async function create_warehouse() {
 }
 
 async function onRowEditSave(event) {
+    modifyErrors.value = { name: '', location: '', max_capacity: ''};
     if (event && event.data) {
         let { newData, index } = event;
         warehouses.value[index] = newData;
@@ -75,6 +77,15 @@ async function onRowEditSave(event) {
                 const data = error.response.data;
                 if (data.detail) {
                     toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: data.detail });
+                }
+                if (data.name) {
+                    modifyErrors.value.name = data.name[0];
+                }
+                if (data.location) {
+                    modifyErrors.value.location = data.location[0];
+                }
+                if (data.max_capacity) {
+                    modifyErrors.value.max_capacity = data.max_capacity[0];
                 }
             } else {
                 toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
@@ -151,22 +162,37 @@ onMounted(async () => {
         <DataTable v-model:editingRows="editingRows" editMode="row" dataKey="id" @row-edit-save="onRowEditSave" :value="warehouses" tableStyle="min-width: 50rem" removableSort>
 
             <Column field="name" header="Nom" editor="true" sortable>
+                <template #body="slotProps">
+                    <span v-if="!modifyErrors.name">{{ slotProps.data.name }}</span>
+                    <p-message v-if="modifyErrors.name" severity="error">{{ modifyErrors.name }}</p-message>
+                </template>
                 <template #editor="slotProps">
                     <InputText v-model="slotProps.data.name" fluid />
                 </template>
             </Column>
 
             <Column field="location" header="Location" editor="true">
+                <template #body="slotProps">
+                    <span v-if="!modifyErrors.location">{{ slotProps.data.location }}</span>
+                    <p-message v-if="modifyErrors.location" severity="error">{{ modifyErrors.location }}</p-message>
+                </template>
                 <template #editor="slotProps">
                     <InputText v-model="slotProps.data.location" fluid />
                 </template>
             </Column>
 
             <Column field="max_capacity" header="Capacité maximale" editor="true" sortable>
+                <template #body="slotProps">
+                    <span v-if="!modifyErrors.max_capacity">{{ slotProps.data.max_capacity }}</span>
+                    <p-message v-if="modifyErrors.max_capacity" severity="error">{{ modifyErrors.max_capacity }}</p-message>
+                </template>
                 <template #editor="slotProps">
                     <InputNumber v-model="slotProps.data.max_capacity" fluid />
                 </template>
             </Column>
+            
+            <Column field="actual_capacity" header="Capacité actuelle" editor="false" sortable />
+
 
             <Column editor="true">
                 <template #editor="slotProps">

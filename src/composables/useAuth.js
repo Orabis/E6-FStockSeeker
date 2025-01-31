@@ -1,18 +1,23 @@
 import { ref, onMounted } from 'vue';
-import { getuserinfo } from '../api.js';
+import { getuserinfo, verifyCookie } from '../api.js';
 import Cookies from 'js-cookie';
 const isAuth = ref(false);
 const userInfo = ref(null);
 
 export function useAuth() {
   onMounted(async () => {
-    const accessToken = sessionStorage.getItem('access_token');
+    const accessToken = verifyCookie();
     if (accessToken) {
       isAuth.value = true;
       try {
         userInfo.value = await getuserinfo();
       } catch (error) {
-        console.error('Erreur de récupération des informations utilisateur :', error);
+        if (error.response.status = 401){
+          console.error('Expired access token logging out');
+        } else {
+          console.error('erreur inconnue déconnexion')
+        }
+        Cookies.remove('access_token');
         isAuth.value = false;
         userInfo.value = null;
       }
@@ -20,8 +25,7 @@ export function useAuth() {
   });
 
   const logout = () => {
-    sessionStorage.removeItem('access_token');
-    Cookies.remove('refresh');
+    Cookies.remove('access_token');
     isAuth.value = false;
     userInfo.value = null;
   };

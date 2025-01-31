@@ -9,99 +9,115 @@ const api = axios.create({
 
 export const createUser = async (userData) => {
     const response = await api.post('/users', userData);
-    const { access, refresh } = response.data;
+    const accessToken = response.data.access;
 
-    Cookies.set('refresh', refresh,{
+    Cookies.set('access_token', accessToken,{
         expires: 1,
         secure: true,
         sameSite: 'strict',
     });
-    sessionStorage.setItem('access_token', access);
     return response.data
 };
 
 export const loginUser = async (userData) => {
     const response = await api.post('/token/', userData);
-    const { access, refresh } = response.data;
-
-    Cookies.set('refresh', refresh,{
+    const accessToken = response.data.access;
+    Cookies.set('access_token', accessToken,{
         expires: 1,
         secure: true,
         sameSite: 'strict',
     });
-    sessionStorage.setItem('access_token', access);
     return response.data;
 };
 
 export const updateUser = async (userData) => {
+    const cookie = verifyCookie();
     const response = await api.put('/users/me/', userData, {
-        headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+        headers: {Authorization: `Bearer ${cookie}`},
     });
     return response.data;
 }
 export const getuserinfo = async () => {
+    const cookie = verifyCookie();
     const response = await api.get('/users/me/', {
-        headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+        headers: {Authorization: `Bearer ${cookie}`},
     });
     return response.data;
 };
 
 export const createProduct = async (productData) => {
+    const cookie = verifyCookie();
     const response = await api.post('/products/', productData, {
-        headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+        headers: {Authorization: `Bearer ${cookie}`},
 });
     return response.data;
 };
 
 export const  getProducts = async () => {
+  const cookie = verifyCookie();
   const response = await api.get('/products/', {
-      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+      headers: {Authorization: `Bearer ${cookie}`},
 });
   return response.data;
 };
 
 export const modifyProduct = async (productData, id) => {
+  const cookie = verifyCookie();
   const response = await api.patch(`/products/${id}/`, productData, {
-      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+      headers: {Authorization: `Bearer ${cookie}`},
 });
 return response.data;
 };
 
 export const deleteProduct = async (id) => {
+  const cookie = verifyCookie();
   const response = await api.delete(`/products/${id}/`, {
-      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+      headers: {Authorization: `Bearer ${cookie}`},
 });
 return response.data;
 };
 
 export const getWarehouses = async () => {
+  const cookie = verifyCookie();
   const response = await api.get('/warehouses/', {
-      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+      headers: {Authorization: `Bearer ${cookie}`},
 });
   return response.data;
 };
 
 export const createWarehouse = async (warehouseData) => {
+  const cookie = verifyCookie();
   const response = await api.post('/warehouses/', warehouseData, {
-      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+      headers: {Authorization: `Bearer ${cookie}`},
 });
   return response.data;
 }
 
 export const modifyWarehouse = async (warehouseData, id) => {
+  const cookie = verifyCookie();
   const response = await api.patch(`/warehouses/${id}/`, warehouseData, {
-      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+      headers: {Authorization: `Bearer ${cookie}`},
 });
   return response.data;
 };
 
 export const deleteWarehouse = async (id) => {
+  const cookie = verifyCookie();
   const response = await api.delete(`/warehouses/${id}/`, {
-      headers: {Authorization: `Bearer ${sessionStorage.getItem('access_token')}`},
+      headers: {Authorization: `Bearer ${cookie}`},
 });
   return response.data;
 };
-const refreshAccessToken = async () => {
+
+export function verifyCookie() {
+  const accessToken = Cookies.get("access_token");
+  if (accessToken) {
+    return accessToken
+  } else {
+    return null
+  }
+}
+/* const refreshAccessToken = async () => {
   try {
     const response = await api.post('/token/refresh', {'refresh': Cookies.get('refresh')}, {
       withCredentials: true, 
@@ -116,27 +132,15 @@ const refreshAccessToken = async () => {
   }
 };
 
+
 api.interceptors.response.use(
-  (response) => response, 
-  async (error) => {
-    if (error.response && error.response.status === 401) {
-      const errorMessage = error.response.data.detail;
-      if (errorMessage === "No active account found with the given credentials") {
-        return Promise.reject(error);
-      } else {
-        const tokens = await refreshAccessToken();
-        if (tokens) {
-          const [newAccessToken, newRefreshToken] = tokens;
-          Cookies.set('refresh', newRefreshToken, {
-            expires: 1,
-            secure: true,
-            sameSite: 'strict',
-          });
-          error.config.headers['Authorization'] = `Bearer ${newAccessToken}`;
-          return api(error.config);
-        }
-      }
-    }
+  (response) => {
+    const cookie = Cookies.get('refresh');
+    console.log(cookie);
+    return response;
+  },
+  (error) => {
     return Promise.reject(error);
   }
 );
+*/

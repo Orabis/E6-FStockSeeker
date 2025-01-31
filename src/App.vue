@@ -13,6 +13,7 @@
   const { isAuth,userInfo,logout } = useAuth();
   
   const getMenuItems = () =>{
+    console.log(isAuth.value)
     if(isAuth.value){
       return [
         {
@@ -52,11 +53,6 @@
       ];
       } else {
           return [
-          {
-            label: 'Accueil',
-            command:() => router.push({name:'home'}),
-            icon: 'pi pi-home',
-          },
           {
             label:'Register/Login',
             command:() => router.push({name:'login'}),

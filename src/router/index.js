@@ -4,6 +4,7 @@ import SwaggerView from '../views/Swagger.vue';
 import LoginView from '../views/Login.vue';
 import DashboardView from '../views/Dashboard.vue';
 import WarehousesView from '../views/Warehouses.vue';
+import { verifyCookie } from '../api.js';
 const routes = [
   {
     path: '/',
@@ -47,7 +48,7 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to,from,next) => {
-  const isAuthenticate = sessionStorage.getItem('access_token');
+  const isAuthenticate = verifyCookie();
   if (to.meta.requireAuth && !isAuthenticate || isAuthenticate === 'undefined' || isAuthenticate === 'null') {
     next({name: 'login'});
   } else next();

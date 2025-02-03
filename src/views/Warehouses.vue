@@ -97,6 +97,7 @@ async function onRowEditSave(event) {
 async function removeWarehouse(id) {
     try {
         await deleteWarehouse(id);
+        editingRows.value = [];
         warehouses.value = await getWarehouses();
         toast.add({ severity: 'success', life: 2500, summary: 'Succès', detail: 'Entrepôt supprimé' });
     } catch (error) {

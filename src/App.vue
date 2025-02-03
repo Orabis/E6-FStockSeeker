@@ -13,7 +13,6 @@
   const { isAuth,userInfo,logout } = useAuth();
   
   const getMenuItems = () =>{
-    console.log(isAuth.value)
     if(isAuth.value){
       return [
         {

@@ -2,6 +2,7 @@
 import { ref, onMounted} from 'vue';
 import Chart from 'primevue/chart';
 import Fieldset from 'primevue/fieldset';
+import MeterGroup from 'primevue/metergroup';
 import { getProducts,getWarehouses } from '../api.js';
 
 const products = ref();
@@ -15,6 +16,16 @@ const colorsSchemes = [
     "#d1ccc0", "#ffb142", "#ffda79", "#b33939",
     "#cd6133", "#84817a", "#cc8e35", "#ccae62"
 ];
+
+const getProductValues = (warehouse) => {
+    return products.value
+        .filter(product => product.warehouses.includes(warehouse.id))
+        .map(product => ({
+            label: product.name,
+            color: getColorForProduct(product.name),
+            value: (product.quantity * 100) / warehouse.max_capacity
+        }));
+};
 
 const getColorForProduct = (productName) => {
     if (!productColors[productName]) {
@@ -45,7 +56,14 @@ onMounted(async () => {
 
 <template>
     <Fieldset legend="Graph" style="max-width: 600px; margin: auto; padding:20px" toggleable>
-        <p>test</p>
         <Chart type="pie" :data="chartData"></Chart>
+    </Fieldset>
+    <Fieldset legend="Used capacity" style="max-width: 600px; margin: auto; padding:20px" toggleable>
+        <ul>
+            <li v-for="warehouse in warehouses" :key="warehouse.id" style="list-style-type: none;">
+                {{ warehouse.name }}
+                <MeterGroup :value="getProductValues(warehouse)"></MeterGroup>
+            </li>
+        </ul>
     </Fieldset>
 </template>

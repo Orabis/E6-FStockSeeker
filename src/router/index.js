@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import ProductsView from '../views/Products.vue';
-import SwaggerView from '../views/Swagger.vue';
 import LoginView from '../views/Login.vue';
 import DashboardView from '../views/Dashboard.vue';
 import WarehousesView from '../views/Warehouses.vue';
@@ -34,12 +33,7 @@ const routes = [
     path: '/login',
     name: 'login',
     component: LoginView,
-  },
-  {
-    path: '/swagger',
-    name: 'swagger',
-    component: SwaggerView,
-  },
+  }
 ];
 
 const router = createRouter({

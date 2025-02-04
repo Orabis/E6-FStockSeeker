@@ -36,11 +36,6 @@
           icon:'pi pi-user',
         },
         {
-          label:'Swagger',
-          command:() => router.push({name:'swagger'}),
-          icon:'pi pi-cog',
-        },
-        {
           label:'Logout',
           command:() => {
             logout();
@@ -56,11 +51,6 @@
             label:'Register/Login',
             command:() => router.push({name:'login'}),
             icon:'pi pi-user',
-          },
-          {
-            label:'Swagger',
-            command:() => router.push({name:'swagger'}),
-            icon:'pi pi-cog',
           },
         ];
         }

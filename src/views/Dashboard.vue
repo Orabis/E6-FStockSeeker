@@ -9,7 +9,9 @@ import Tag from 'primevue/tag';
 
 const products = ref();
 const warehouses = ref();
-const chartData = ref();
+const chartProductsData = ref();
+const chartWarehousesData = ref();
+const chartOptions = {plugins:{legend:{labels:{usePointStyle:true,}}}};
 const productColors = {};
 const colorsSchemes = [
     "#40407a", "#706fd3", "#f7f1e3", "#34ace0",
@@ -37,29 +39,51 @@ const getColorForProduct = (productName) => {
     return productColors[productName];
 };
 
-const setChartData = () => {
+
+const setChartProductsData = () => {
     return {
         labels: products.value.map(product => product.name),
         datasets: [
             {
                 label: 'Quantité',
-                backgroundColor: products.value.map(product => getColorForProduct(product.name)), 
-                data: products.value.map(product => product.quantity)
+                backgroundColor: products.value.map(product => `${getColorForProduct(product.name)}80`), 
+                borderColor : products.value.map(product => getColorForProduct(product.name)),
+                data: products.value.map(product => product.quantity),
+                borderWidth: 1,
             }
         ]
     };
 };
 
+const setChartWarehousesData = () =>{
+    return {
+        labels: warehouses.value.map(warehouse => warehouse.name),
+        datasets: [
+            {
+                label: 'Capacité',
+                backgroundColor: products.value.map(product => `${getColorForProduct(product.name)}80`),
+                borderColor : products.value.map(product => getColorForProduct(product.name)),
+                data: warehouses.value.map(warehouse => warehouse.max_capacity),
+                borderWidth: 1
+            }
+        ]
+    }
+};
+
 onMounted(async () => {
     warehouses.value = await getWarehouses();
     products.value = await getProducts();
-    chartData.value = setChartData();
+    chartProductsData.value = setChartProductsData();
+    chartWarehousesData.value = setChartWarehousesData();
 })
 </script>
 
 <template>
-    <Fieldset legend="Graph" style="max-width: 600px; margin: auto; padding:20px" toggleable>
-        <Chart type="pie" :data="chartData"></Chart>
+    <Fieldset legend="Produits stockés" style="max-width: 600px; margin: auto; padding:20px" toggleable>
+        <Chart type="pie" :data="chartProductsData" :options="chartOptions"></Chart>
+    </Fieldset>
+    <Fieldset legend="Listes des Entrepôts" style="max-width: 600px; margin: auto; padding:20px" toggleable>
+        <Chart type="bar" :data="chartWarehousesData" :options="chartOptions"></Chart>
     </Fieldset>
     <Fieldset legend="Used capacity" style="max-width: 600px; margin: auto; padding:20px" toggleable>
         <ul>
@@ -88,7 +112,15 @@ onMounted(async () => {
         </Carousel>
     </Fieldset>
     <Fieldset legend="Warehouses" style="max-width: 600px; margin: auto; padding:20px" toggleable>
-
-        
+        <Carousel :value="warehouses" 
+        :numVisible="3" 
+        :numScroll="1" 
+        >
+            <template #item="slotProps">
+                <p>{{ slotProps.data.name }}</p>
+                <p>{{ slotProps.data.location }}</p>
+                <p>{{ slotProps.data.max_capacity }}</p>
+            </template>
+        </Carousel>
     </Fieldset>
 </template>

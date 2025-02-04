@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: 'http://192.168.1.41:8000/api',
   timeout: 2500,
   withCredentials: true,
 });
@@ -13,8 +13,8 @@ export const createUser = async (userData) => {
 
     Cookies.set('access_token', accessToken,{
         expires: 1,
-        secure: true,
-        sameSite: 'strict',
+        secure: false,
+        sameSite: 'lax',
     });
     return response.data
 };
@@ -24,8 +24,8 @@ export const loginUser = async (userData) => {
     const accessToken = response.data.access;
     Cookies.set('access_token', accessToken,{
         expires: 1,
-        secure: true,
-        sameSite: 'strict',
+        secure: false,
+        sameSite: 'lax',
     });
     return response.data;
 };

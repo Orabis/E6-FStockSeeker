@@ -28,18 +28,19 @@ const productQuantity = ref(0);
 const productAlert = ref(false);
 const productStockLimit = ref(null);
 const base64Image = ref(null);
-const registerErrors = ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',image:'',warehouses:''});
-const modifyErrors =  ref({name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',image:'',warehouses:''});
-const editingRows = ref([]);
 const selectedWarehouses = ref([]);
+
+const registerErrors = ref({});
+const modifyErrors =  ref({});
+const editingRows = ref([]);
 const warehouses = ref([]);
 
 async function create_product() {
-  registerErrors.value = {name:'',description:'',quantity:'',alert_enabled:'',stock_limit:'',warehouses:''};
   if (productAlert.value && !productStockLimit.value) {
     registerErrors.value.stock_limit = 'Veuillez renseigner une limite de stock.';
     return;
   }
+  registerErrors.value = {};
   try {
     await createProduct({
       name: productName.value,
@@ -53,6 +54,7 @@ async function create_product() {
     warehouses.value = await getWarehouses();
     products.value = await getProducts();
     products.value = enrichProducts();
+    resetForms();
     toast.add({ severity: 'success', life: 2500, summary:`${productName.value} crée`});
 } catch (error){
     if (error.response && error.response.data) {
@@ -60,34 +62,32 @@ async function create_product() {
       if (data.detail) {
         toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: data.detail });
       }
-      if (data.name) {
-        registerErrors.value.name = data.name[0];
-      }
-      if (data.description) {
-        registerErrors.value.description = data.description[0];
-      }
-      if (data.quantity) {
-        registerErrors.value.quantity = data.quantity[0];
-      }
-      if (data.alert_enabled) {
-        registerErrors.value.alert_enabled = data.alert_enabled[0];
-      }
-      if (data.stock_limit) {
-        registerErrors.value.stock_limit = data.stock_limit[0];
-      }
-      if (data.image) {
-        registerErrors.value.image = data.image[0];
-      }
-      if (data.warehouses) {
-        registerErrors.value.warehouses = data.warehouses[0];
+      registerErrors.value = {
+        name: data.name ? data.name[0] : "",
+        description: data.description ? data.description[0]: "",
+        quantity: data.quantity ? data.quantity[0] : "",
+        alert_enabled: data.alert_enabled ? data.alert_enabled[0] : "",
+        stock_limit: data.stock_limit ? data.stock_limit[0] : "",
+        image: data.image ? data.image[0] : "",
+        warehouses: data.warehouses ? data.warehouses[0] : "",
       }
     } else {
       toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
     }
   }
 }
+
+function resetForms() {
+  productName.value = '';
+  productDescription.value = '';
+  productQuantity.value = 0;
+  productAlert.value = false;
+  productStockLimit.value = null;
+  base64Image.value = null;
+  selectedWarehouses.value = [];
+};
+
 async function onRowEditSave(event) {
-  modifyErrors.value = { name: '', description: '', quantity: '', alert_enabled: '', stock_limit: '', image: '', warehouses: '' };
   if (event && event.data) {
     let {newData, index} = event;
     products.value[index] = newData;
@@ -97,6 +97,7 @@ async function onRowEditSave(event) {
       toast.add({ severity: 'error', life: 2500, summary: 'Error', detail: 'Aucune donnée n\'a été modifiée.' });
       return;
     }
+    modifyErrors.value[newData.id] = {};
     try {
       await modifyProduct({
         id: newData.id,
@@ -116,27 +117,15 @@ async function onRowEditSave(event) {
         if (data.detail) {
           toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: data.detail });
         }
-        if (data.name) {
-          modifyErrors.value.name = data.name[0];
-        }
-        if (data.description) {
-          modifyErrors.value.description = data.description[0];
-        }
-        if (data.quantity) {
-          modifyErrors.value.quantity = data.quantity[0];
-        }
-        if (data.alert_enabled) {
-          modifyErrors.value.alert_enabled = data.alert_enabled[0];
-        }
-        if (data.stock_limit) {
-          modifyErrors.value.stock_limit = data.stock_limit[0];
-        }
-        if (data.image) {
-          modifyErrors.value.image = data.image[0];
-        }
-        if (data.warehouses) {
-          modifyErrors.value.warehouses = data.warehouses[0];
-        }
+        modifyErrors.value[newData.id] = {
+          name: data.name ? data.name[0] : "",
+          description: data.description ? data.description[0]: "",
+          quantity: data.quantity ? data.quantity[0] : "",
+          alert_enabled: data.alert_enabled ? data.alert_enabled[0] : "",
+          stock_limit: data.stock_limit ? data.stock_limit[0] : "",
+          image: data.image ? data.image[0] : "",
+          warehouses: data.warehouses ? data.warehouses[0] : "",
+        };
       } else {
         toast.add({ severity: 'error', life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
       }
@@ -341,6 +330,7 @@ try {
                 optionLabel="name"
                 placeholder="Sélectionner un entrepôt"
                 display="chip"
+                :invalid="!!registerErrors.warehouses"
                 ></MultiSelect>
           </InputGroup>
         </div>
@@ -418,8 +408,8 @@ try {
 
       <Column field="name" header="Name" editor="true" sortable>
         <template #body="slotProps">
-          <span v-if="!modifyErrors.name">{{ slotProps.data.name }}</span>
-          <p-message v-if="modifyErrors.name" severity="error">{{ modifyErrors.name }}</p-message>
+          <span v-if="!modifyErrors[slotProps.data.id]?.name">{{ slotProps.data.name }}</span>
+          <p-message v-if="modifyErrors[slotProps.data.id]?.name" severity="error">{{ modifyErrors[slotProps.data.id].name }}</p-message>
         </template>
         <template #editor="slotProps">
           <InputText v-model="slotProps.data.name" fluid />
@@ -428,10 +418,10 @@ try {
 
       <Column field="description" header="Description" editor="true">
         <template #body="slotProps">
-          <span v-if="!modifyErrors.description" :title="slotProps.data.description">
+          <span v-if="!modifyErrors[slotProps.data.id]?.description" :title="slotProps.data.description">
             {{ truncate(slotProps.data.description, 50) }}
           </span>
-          <p-message v-if="modifyErrors.description" severity="error">{{ modifyErrors.description }}</p-message>
+          <p-message v-if="modifyErrors[slotProps.data.id]?.description" severity="error">{{ modifyErrors[slotProps.data.id].description }}</p-message>
         </template>
         <template #editor="slotProps">
           <InputText v-model="slotProps.data.description" fluid />
@@ -440,11 +430,11 @@ try {
 
       <Column field="quantity" header="Quantity" editor="true" sortable>
         <template #body="slotProps">
-          <Badge v-if="!modifyErrors.quantity"
+          <Badge v-if="!modifyErrors[slotProps.data.id]?.quantity"
             :value="slotProps.data.quantity"
             :severity="stockSeverity(slotProps.data)"
           />
-          <p-message v-if="modifyErrors.quantity" severity="error">{{ modifyErrors.quantity }}</p-message>
+          <p-message v-if="modifyErrors[slotProps.data.id]?.quantity" severity="error">{{ modifyErrors[slotProps.data.id].quantity }}</p-message>
         </template>
         <template #editor="slotProps">
           <InputNumber v-model="slotProps.data.quantity" fluid />
@@ -452,10 +442,10 @@ try {
       </Column>
       <Column header="Entrepôt" editor="true" sortable> 
         <template #body="slotProps">
-          <span v-if="!modifyErrors.warehouses" v-for="warehouse in slotProps.data.warehouses" :key="warehouse.id">
+          <span v-if="!modifyErrors[slotProps.data.id]?.warehouses" v-for="warehouse in slotProps.data.warehouses" :key="warehouse.id">
             {{ warehouse.name }}({{ warehouse.actual_capacity }}/{{ warehouse.max_capacity }}),
           </span>
-          <p-message v-if="modifyErrors.warehouses" severity="error">{{ modifyErrors.warehouses }}</p-message>
+          <p-message v-if="modifyErrors[slotProps.data.id]?.warehouses" severity="error">{{ modifyErrors[slotProps.data.id].warehouses }}</p-message>
         </template>
         <template #editor="slotProps">
           <MultiSelect
@@ -463,7 +453,7 @@ try {
             :options="warehouses"
             optionLabel="name"
             placeholder="Sélectionner un entrepôt"
-
+            :invalid="!!modifyErrors[slotProps.data.id]?.warehouses"
           ></MultiSelect>
         </template>
       </Column>

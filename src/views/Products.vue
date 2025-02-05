@@ -22,7 +22,9 @@ const toast = useToast();
 const formatDate = (date) => DateTime.fromISO(date).toLocaleString(DateTime.DATETIME_MED);
 
 const products = ref([]);
+
 const productName = ref('');
+const productReference = ref('');
 const productDescription = ref('');
 const productQuantity = ref(0);
 const productAlert = ref(false);
@@ -44,6 +46,7 @@ async function create_product() {
   try {
     await createProduct({
       name: productName.value,
+      reference: productReference.value,
       description: productDescription.value,
       quantity: productQuantity.value,
       alert_enabled: productAlert.value,
@@ -65,6 +68,7 @@ async function create_product() {
       registerErrors.value = {
         name: data.name ? data.name[0] : "",
         description: data.description ? data.description[0]: "",
+        reference: data.reference ? data.reference[0]: "",
         quantity: data.quantity ? data.quantity[0] : "",
         alert_enabled: data.alert_enabled ? data.alert_enabled[0] : "",
         stock_limit: data.stock_limit ? data.stock_limit[0] : "",
@@ -80,6 +84,7 @@ async function create_product() {
 function resetForms() {
   productName.value = '';
   productDescription.value = '';
+  productReference.value = '';
   productQuantity.value = 0;
   productAlert.value = false;
   productStockLimit.value = null;
@@ -102,14 +107,17 @@ async function onRowEditSave(event) {
       await modifyProduct({
         id: newData.id,
         name: newData.name,
+        reference: newData.reference,
         description: newData.description,
         quantity: newData.quantity,
+        image: base64Image.value,
         warehouses: newData.warehouse.map((warehouse) => warehouse.id),
       },
       newData.id);
       warehouses.value = await getWarehouses();
       products.value = await getProducts();
       products.value = enrichProducts();
+      resetForms();
       toast.add({ severity: 'success', life: 2500, summary: 'Succès', detail: 'Produit modifié.' });
   } catch (error) {
       if (error.response && error.response.data) {
@@ -120,6 +128,7 @@ async function onRowEditSave(event) {
         modifyErrors.value[newData.id] = {
           name: data.name ? data.name[0] : "",
           description: data.description ? data.description[0]: "",
+          reference: data.reference ? data.reference[0]: "",
           quantity: data.quantity ? data.quantity[0] : "",
           alert_enabled: data.alert_enabled ? data.alert_enabled[0] : "",
           stock_limit: data.stock_limit ? data.stock_limit[0] : "",
@@ -249,6 +258,23 @@ try {
             {{ registerErrors.name }}
           </p-message>
         </div>
+        
+        <div class="form">
+          <InputGroup>
+            <InputGroupAddon>Reference :</InputGroupAddon>
+            <InputText
+              type="text"
+              id="register-reference"
+              v-model="productReference"
+            />
+          </InputGroup>
+          <p-message
+            v-if="registerErrors.description"
+            severity="error"
+          >
+            {{ registerErrors.description }}
+          </p-message>
+        </div>
 
         <div class="form">
           <InputGroup>
@@ -278,12 +304,6 @@ try {
               required
             />
           </InputGroup>
-          <p-message
-            v-if="registerErrors.quantity"
-            severity="error"
-          >
-            {{ registerErrors.quantity }}
-          </p-message>
         </div>
 
         <div class="form">
@@ -355,8 +375,20 @@ try {
             severity="error">
             {{ registerErrors.warehouses }}
           </p-message>
+          <p-message
+            v-if="registerErrors.quantity"
+            severity="error"
+          >
+            {{ registerErrors.quantity }}
+          </p-message>
+          <p-message
+            v-if="registerErrors.reference"
+            severity="error"
+          >
+            {{ registerErrors.reference }}
+          </p-message>
         </div>
-                <Button
+        <Button
           label="Créer"
           type="submit"
           class="p-button-primary"
@@ -384,12 +416,26 @@ try {
         </div>
       </template>
 
-      <Column field="image">
+      <Column field="image"editor="true">
         <template #body="slotProps">
           <img
             :src="slotProps.data.image"
             style="width: 6rem"
           />
+        </template>
+        <template #editor>
+          <FileUpload
+          name="editProductImage"
+          accept="image/*"
+          mode="basic"
+          customUpload
+          :auto="true"
+          :multiple="false"
+          :maxFileSize="1000000"
+          :chooseLabel='"modifier image"'
+          @uploader="handleFileUpload"
+          >
+        </FileUpload>
         </template>
       </Column>
 
@@ -415,6 +461,17 @@ try {
           <InputText v-model="slotProps.data.name" fluid />
         </template>
       </Column>
+
+      <Column field="reference" header="reference" editor="true" sortable>
+        <template #body="slotProps">
+          <span v-if="!modifyErrors[slotProps.data.id]?.reference">{{ slotProps.data.reference }}</span>
+          <p-message v-if="modifyErrors[slotProps.data.id]?.reference" severity="error">{{ modifyErrors[slotProps.data.id].reference }}</p-message>
+        </template>
+        <template #editor="slotProps">
+          <InputText v-model="slotProps.data.reference" fluid />
+        </template>
+      </Column>
+
 
       <Column field="description" header="Description" editor="true">
         <template #body="slotProps">

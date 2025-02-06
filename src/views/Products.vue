@@ -29,7 +29,8 @@ const productDescription = ref('');
 const productQuantity = ref(0);
 const productAlert = ref(false);
 const productStockLimit = ref(null);
-const base64Image = ref(null);
+const b64Img = ref(null);
+const b64Modif = ref(null);
 const selectedWarehouses = ref([]);
 
 const registerErrors = ref({});
@@ -51,7 +52,7 @@ async function create_product() {
       quantity: productQuantity.value,
       alert_enabled: productAlert.value,
       stock_limit: productStockLimit.value,
-      image: base64Image.value,
+      image: b64Img.value,
       warehouses: selectedWarehouses.value.map((warehouse) => warehouse.id),
     });
     warehouses.value = await getWarehouses();
@@ -88,8 +89,17 @@ function resetForms() {
   productQuantity.value = 0;
   productAlert.value = false;
   productStockLimit.value = null;
-  base64Image.value = null;
+  b64Img.value = null;
+  b64Modif.value = null;
   selectedWarehouses.value = [];
+};
+
+function resetImg(modifImg = false){
+  if (modifImg){
+    b64Modif.value = null;
+    return
+  }
+  b64Img.value = null;
 };
 
 async function onRowEditSave(event) {
@@ -103,17 +113,30 @@ async function onRowEditSave(event) {
       return;
     }
     modifyErrors.value[newData.id] = {};
+    let tableDatas = {}
+    console.log(b64Modif)
     try {
-      await modifyProduct({
-        id: newData.id,
-        name: newData.name,
-        reference: newData.reference,
-        description: newData.description,
-        quantity: newData.quantity,
-        image: base64Image.value,
-        warehouses: newData.warehouse.map((warehouse) => warehouse.id),
-      },
-      newData.id);
+      if (b64Modif.value){
+        tableDatas = {
+          id: newData.id,
+          name: newData.name,
+          reference: newData.reference,
+          description: newData.description,
+          quantity: newData.quantity,
+          image: b64Modif.value,
+          warehouses: newData.warehouse.map((warehouse) => warehouse.id),
+        }
+    } else {
+        tableDatas = {
+          id: newData.id,
+          name: newData.name,
+          reference: newData.reference,
+          description: newData.description,
+          quantity: newData.quantity,
+          warehouses: newData.warehouse.map((warehouse) => warehouse.id),
+          }
+        }
+      await modifyProduct(tableDatas,newData.id);
       warehouses.value = await getWarehouses();
       products.value = await getProducts();
       products.value = enrichProducts();
@@ -199,12 +222,16 @@ const truncate = (text, length) => {
   }
   return text;
 };
-const handleFileUpload = (event) => {
+const handleFileUpload = (event, iscreated) => {
   const file = event.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    base64Image.value = reader.result;
+    if (iscreated){
+      b64Img.value = reader.result;
+    } else {
+      b64Modif.value = reader.result;
+    }
     toast.add({ severity: 'success', life: 2500, summary: 'Image ajouté avec succès.' });
   };
   reader.onerror = () => {
@@ -328,17 +355,21 @@ try {
           <div class="form">
             <InputGroup >
               <InputGroupAddon>Image :</InputGroupAddon>
-              <FileUpload
-              name="productImage"
-              accept="image/*" 
-              mode="basic"
-              customUpload
-              :auto="true"
-              :multiple="false"
-              :maxFileSize="1000000"
-              :chooseLabel="'Choisir une image'"
-              @uploader="handleFileUpload" 
-              />
+              <InputGroupAddon v-if="b64Img">
+                <img :src="b64Img" alt="Image" style="width: 6rem">
+                <Button icon="pi pi-times" severity="secondary" @click="resetForms()"/>
+              </InputGroupAddon>
+                <FileUpload
+                name="productImage"
+                accept="image/*" 
+                mode="basic"
+                customUpload
+                :auto="true"
+                :multiple="false"
+                :maxFileSize="1000000"
+                :chooseLabel="'Choisir une image'"
+                @uploader="handleFileUpload($event,true)" 
+                />
             </InputGroup>
         </div>
         <div class="form">
@@ -423,7 +454,7 @@ try {
             style="width: 6rem"
           />
         </template>
-        <template #editor>
+        <template #editor="slotProps">
           <FileUpload
           name="editProductImage"
           accept="image/*"
@@ -433,10 +464,17 @@ try {
           :multiple="false"
           :maxFileSize="1000000"
           :chooseLabel='"modifier image"'
-          @uploader="handleFileUpload"
+          @uploader="handleFileUpload($event,false)"
           >
         </FileUpload>
-        </template>
+        <div v-if="b64Modif">
+          <img :src="b64Modif" alt="Image" style="width: 6rem">
+          <Button icon="pi pi-times" severity="secondary" @click="resetImg(true)"/>
+        </div>
+        <div v-else>
+          <img :src="slotProps.data.image" alt="Image" style="width: 6rem;">
+        </div>
+      </template>
       </Column>
 
       <Column field="is_stock_low" header="Stock" sortable>

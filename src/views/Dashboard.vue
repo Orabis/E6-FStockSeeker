@@ -4,15 +4,25 @@ import Chart from 'primevue/chart';
 import Fieldset from 'primevue/fieldset';
 import MeterGroup from 'primevue/metergroup';
 import Carousel from 'primevue/carousel';
-import { getProducts,getWarehouses } from '../api.js';
+import { getProducts,getWarehouses, modifyProduct } from '../api.js';
 import Tag from 'primevue/tag';
+import AutoComplete from 'primevue/autocomplete';
+import InputNumber from 'primevue/inputnumber';
+import IftaLabel from 'primevue/iftalabel';
+import Button from 'primevue/button'
 
 const products = ref();
 const warehouses = ref();
+
+const selectedRef = ref()
+const filteredRef = ref();
+const newValue = ref();
+
 const chartProductsData = ref();
 const chartWarehousesData = ref();
 const chartOptions = {plugins:{legend:{labels:{usePointStyle:true,}}}};
 const productColors = {};
+const warehouseColors ={};
 const colorsSchemes = [
     "#40407a", "#706fd3", "#f7f1e3", "#34ace0",
     "#33d9b2", "#2c2c54", "#474787", "#aaa69d",
@@ -38,6 +48,13 @@ const getColorForProduct = (productName) => {
     }
     return productColors[productName];
 };
+const getColorForWarehouse = (warehouseName) => {
+    if (!warehouseColors[warehouseName]) {
+        warehouseColors[warehouseName] = colorsSchemes[Object.keys(warehouseColors).length % colorsSchemes.length];
+    }
+    return warehouseColors[warehouseName];
+};
+
 
 
 const setChartProductsData = () => {
@@ -61,8 +78,8 @@ const setChartWarehousesData = () =>{
         datasets: [
             {
                 label: 'Capacité',
-                backgroundColor: products.value.map(product => `${getColorForProduct(product.name)}80`),
-                borderColor : products.value.map(product => getColorForProduct(product.name)),
+                backgroundColor: warehouses.value.map(warehouse => `${getColorForWarehouse(warehouse.name)}80`),
+                borderColor : warehouses.value.map(warehouse => getColorForWarehouse(warehouse.name)),
                 data: warehouses.value.map(warehouse => warehouse.max_capacity),
                 borderWidth: 1
             }
@@ -70,15 +87,45 @@ const setChartWarehousesData = () =>{
     }
 };
 
+const search = (event) => {
+    filteredRef.value = products.value.filter(product => 
+        product.reference.toLowerCase().includes(event.query.toLowerCase())
+    );
+}
 onMounted(async () => {
     warehouses.value = await getWarehouses();
     products.value = await getProducts();
     chartProductsData.value = setChartProductsData();
     chartWarehousesData.value = setChartWarehousesData();
 })
+
+const productValueModifier = async () => {
+    if (!selectedRef.value || !newValue.value) return;
+
+    const product = products.value.find(p => p.reference === selectedRef.value.reference);
+    if (product) {
+        const newQuantity = product.quantity + newValue.value
+        try{
+            await modifyProduct({
+                quantity: newQuantity,
+                warehouses: product.warehouses
+            }, product.id);
+            warehouses.value = await getWarehouses();
+            products.value = await getProducts();
+            chartProductsData.value = setChartProductsData();
+            chartWarehousesData.value = setChartWarehousesData();
+        } catch (error){
+            console.error(error)
+        }
+    } else {
+        console.error("no product found")
+    }
+};
+    
 </script>
 
 <template>
+
     <Fieldset legend="Produits stockés" style="max-width: 600px; margin: auto; padding:20px" toggleable>
         <Chart type="pie" :data="chartProductsData" :options="chartOptions"></Chart>
     </Fieldset>
@@ -94,6 +141,20 @@ onMounted(async () => {
         </ul>
     </Fieldset>
     <Fieldset legend="Products" style="max-width: 600px; margin: auto; padding:20px" toggleable>
+        <form @submit.prevent="productValueModifier">
+            <IftaLabel>
+                <AutoComplete inputId="reference" name="reference" optionLabel="reference" variant="filled" :suggestions="filteredRef" v-model="selectedRef" @complete="search"></AutoComplete>
+                <label for="reference">Reference</label>
+            </IftaLabel>
+            <IftaLabel>
+                <InputNumber inputId="number-value" showButtons v-model="newValue" mode="decimal"></InputNumber>
+                <label for="number-value">Ajouter/Soustraire</label>
+            </IftaLabel>
+            <Button
+                label="update"
+                type="submit"
+                class="p-button-primary"> </Button>
+        </form>
         <Carousel :value="products" 
         :numVisible="3" 
         :numScroll="1" 
@@ -106,6 +167,7 @@ onMounted(async () => {
                     <Tag severity="info" value="STOCK OK" rounded> </Tag>
                 </span>
                 <p>{{ slotProps.data.name }}</p>
+                <p>{{ slotProps.data.reference }}</p>
                 <p>{{ slotProps.data.quantity }}</p>
                 <img :src="slotProps.data.image" alt="" style="border-radius: 8px; width: 150px;">
             </template>

@@ -10,6 +10,9 @@ import AutoComplete from 'primevue/autocomplete';
 import InputNumber from 'primevue/inputnumber';
 import IftaLabel from 'primevue/iftalabel';
 import Button from 'primevue/button'
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast();
 
 const products = ref();
 const warehouses = ref();
@@ -95,6 +98,7 @@ const search = (event) => {
 onMounted(async () => {
     warehouses.value = await getWarehouses();
     products.value = await getProducts();
+    makeAlert(products.value.filter(productsAlerts => productsAlerts.is_stock_low && productsAlerts.alert_enabled))
     chartProductsData.value = setChartProductsData();
     chartWarehousesData.value = setChartWarehousesData();
 })
@@ -121,7 +125,9 @@ const productValueModifier = async () => {
         console.error("no product found")
     }
 };
-    
+function makeAlert(productsAlerts){
+    productsAlerts.forEach(product => toast.add({ severity: 'warn', life: 4500, summary:`Attention ${product.name} est dessous du seuil définie`}));
+}
 </script>
 
 <template>

@@ -128,7 +128,7 @@ async function modify_user() {
         <form class="form-update-user" @submit.prevent="modify_user">
           <div class="field">
             <IftaLabel>
-              <InputText id="modify-username" v-model="usernameModify" placeholder="" required fluid />
+              <InputText id="modify-username" v-model="usernameModify"  required fluid />
               <label for="modify-username">Nom d'utilisateur :</label>
             </IftaLabel>
           </div>

@@ -63,6 +63,7 @@ async function create_product() {
     products.value = await getProducts();
     products.value = enrichProducts();
     resetForms();
+    visible.value = false
     toast.add({ severity: 'success', life: 2500, summary:`${productName.value} crée`});
 } catch (error){
     if (error.response && error.response.data) {
@@ -427,9 +428,7 @@ try {
         icon="pi pi-check"
           label="Créer"
           type="submit"
-          class="p-button-primary"
-          @click="visible = false"
-        />
+          class="p-button-primary"/>
       </form>
       </Dialog>
     </div>
@@ -473,20 +472,20 @@ try {
       </template>
       </Column>
 
-      <Column field="is_stock_low" header="Stock" sortable>
+      <Column field="is_stock_low" header="En stock" sortable>
         <template #body="slotProps">
           <Tag
             :severity="slotProps.data.is_stock_low
               ? 'danger'
               : 'success'"
             :value="slotProps.data.is_stock_low
-              ? 'LOWSTOCK'
-              : 'INSTOCK'"
+              ? 'STOCK FAIBLE'
+              : 'EN STOCK'"
           />
         </template>
       </Column>
 
-      <Column field="name" header="Name" editor="true" sortable>
+      <Column field="name" header="Nom" editor="true" sortable>
         <template #body="slotProps">
           <span v-if="!modifyErrors[slotProps.data.id]?.name">{{ slotProps.data.name }}</span>
           <p-message v-if="modifyErrors[slotProps.data.id]?.name" severity="error">{{ modifyErrors[slotProps.data.id].name }}</p-message>
@@ -496,7 +495,7 @@ try {
         </template>
       </Column>
 
-      <Column field="reference" header="reference" editor="true" sortable>
+      <Column field="reference" header="Réference" editor="true" sortable>
         <template #body="slotProps">
           <span v-if="!modifyErrors[slotProps.data.id]?.reference">{{ slotProps.data.reference }}</span>
           <p-message v-if="modifyErrors[slotProps.data.id]?.reference" severity="error">{{ modifyErrors[slotProps.data.id].reference }}</p-message>
@@ -560,7 +559,7 @@ try {
       </Column>
       <Column
         :rowEditor="true"
-        style="width: 10%; min-width: 8rem"
+        style="width: 10%;"
         bodyStyle="text-align:center"
       />
     </DataTable>

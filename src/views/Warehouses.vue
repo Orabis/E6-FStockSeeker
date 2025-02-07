@@ -145,7 +145,7 @@ onMounted(async () => {
                 <div class="form">
                     <IftaLabel>
                         <InputText name="register-location" type="text" id="register-location" v-model="warehouseLocation" required fluid/>
-                        <label for="register-location">Location :</label>
+                        <label for="register-location">Localisation :</label>
                     </IftaLabel>
                     <p-message v-if="registerErrors.location" severity="error">{{ registerErrors.location }}</p-message>
                 </div>
@@ -174,7 +174,7 @@ onMounted(async () => {
                 </template>
             </Column>
 
-            <Column field="location" header="Location" editor="true">
+            <Column field="location" header="Localisation" editor="true">
                 <template #body="slotProps">
                     <span v-if="!modifyErrors.location">{{ slotProps.data.location }}</span>
                     <p-message v-if="modifyErrors.location" severity="error">{{ modifyErrors.location }}</p-message>

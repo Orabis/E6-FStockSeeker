@@ -12,6 +12,8 @@ import IftaLabel from 'primevue/iftalabel';
 import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast';
 import Divider from 'primevue/divider';
+import ScrollPanel from 'primevue/scrollpanel';
+import Chip from 'primevue/chip';
 
 const toast = useToast();
 
@@ -139,46 +141,53 @@ function makeAlert(productsAlerts){
         <Fieldset class="fieldset-section fieldset-wh-graph" legend="Listes des Entrepôts" >
             <Chart type="bar" :data="chartWarehousesData" :options="chartOptions"></Chart>
         </Fieldset>
-        <Fieldset class="fieldset-section fieldset-capacity-usage" legend="Used capacity" >
+        <Fieldset class="fieldset-section fieldset-capacity-usage" legend=" Capacité utilisé" >
+            <ScrollPanel style="width: 100%; height: 20rem">
             <ul>
-                <li v-for="warehouse in warehouses" :key="warehouse.id" style="list-style-type: none;">
-                    {{ warehouse.name }}
+                <li v-for="warehouse in warehouses" :key="warehouse.id">
+                    <h4>{{ warehouse.name }}</h4>
                     <MeterGroup :value="getProductValues(warehouse)"></MeterGroup>
+                    <Divider />
                 </li>
             </ul>
+        </ScrollPanel>
         </Fieldset>
         <Fieldset class="fieldset-section fieldset-quickadd" legend="Ajout Rapide" >
-            <form @submit.prevent="productValueModifier">
+            <form class="form-update-user" @submit.prevent="productValueModifier">
                 <IftaLabel>
-                    <AutoComplete inputId="reference" name="reference" optionLabel="reference" variant="filled" :suggestions="filteredRef" v-model="selectedRef" @complete="search" fluid></AutoComplete>
-                    <label for="reference">Reference</label>
+                    <AutoComplete inputId="reference" name="reference" optionLabel="reference" :suggestions="filteredRef" v-model="selectedRef" @complete="search" fluid></AutoComplete>
+                    <label for="reference">Réference :</label>
                 </IftaLabel>
                 <IftaLabel>
                     <InputNumber inputId="number-value" showButtons v-model="newValue" mode="decimal" fluid></InputNumber>
-                    <label for="number-value">Ajouter/Soustraire</label>
+                    <label for="number-value">Ajouter/Soustraire :</label>
                 </IftaLabel>
                 <Button
-                    label="update"
+                    label="Modifier"
+                    icon="pi pi-file-edit
+"
                     type="submit"
                     class="p-button-primary"> </Button>
             </form>
         </Fieldset>
-        <Fieldset class="fieldset-section fieldset-list-wh-p" legend="Products et Entrepôt" >
+        <Fieldset class="fieldset-section fieldset-list-wh-p" legend="Products et Entrepôt">
             <Carousel :value="products" 
             :numVisible="3" 
             :numScroll="1" 
             >
                 <template #item="slotProps">
-                    <span v-if="slotProps.data.alert_enabled && slotProps.data.is_stock_low" style="color:red">
-                        <Tag severity="danger" value="STOCK FAIBLE" rounded> </Tag>
-                    </span>
-                    <span v-else>
-                        <Tag severity="info" value="STOCK OK" rounded> </Tag>
-                    </span>
-                    <p>{{ slotProps.data.name }}</p>
-                    <p>{{ slotProps.data.reference }}</p>
-                    <p>{{ slotProps.data.quantity }}</p>
-                    <img :src="slotProps.data.image" alt="" style="border-radius: 8px; width: 150px;">
+                    <div class="carousel-products">
+                        <span v-if="slotProps.data.alert_enabled && slotProps.data.is_stock_low">
+                            <Tag icon="pi pi-box"severity="danger" value="STOCK FAIBLE" rounded> </Tag>
+                        </span>
+                        <span v-else>
+                            <Tag icon="pi pi-box" severity="info" value="STOCK OK" rounded> </Tag>
+                        </span>
+                        <img v-if="slotProps.data.image" :src="slotProps.data.image" alt="" style="border-radius: 8px; width: 6rem; height: 6rem;">
+                        <i v-if="!slotProps.data.image" class="pi pi-eye-slash" style="font-size: 6rem"></i>
+                        <Chip icon="pi pi-box" :label="String(slotProps.data.quantity)"/>
+                        <Chip icon="pi pi-hashtag" :label="String(slotProps.data.reference)"></Chip>
+                    </div>
                 </template>
             </Carousel>
             <Divider />
@@ -186,10 +195,12 @@ function makeAlert(productsAlerts){
             :numVisible="3" 
             :numScroll="1" 
             >
-                <template #item="slotProps">
-                    <p>{{ slotProps.data.name }}</p>
-                    <p>{{ slotProps.data.location }}</p>
-                    <p>{{ slotProps.data.max_capacity }}</p>
+                <template #item="slotProps" >
+                    <div class="carousel-products">
+                        <h4>{{ slotProps.data.name }}</h4>
+                        <Chip icon="pi pi-map-marker" :label="slotProps.data.location"></Chip>
+                        <Chip icon="pi pi-shop" :label="`${slotProps.data.max_capacity}`"></Chip>
+                    </div>
                 </template>
             </Carousel>
         </Fieldset>

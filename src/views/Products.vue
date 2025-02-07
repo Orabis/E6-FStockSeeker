@@ -129,6 +129,8 @@ async function onRowEditSave(event) {
           description: newData.description,
           quantity: newData.quantity,
           image: b64Modif.value,
+          alert_enabled: newData.alert_enabled,
+          stock_limit: newData.stock_limit,
           warehouses: newData.warehouse.map((warehouse) => warehouse.id),
         }
     } else {
@@ -138,6 +140,8 @@ async function onRowEditSave(event) {
           reference: newData.reference,
           description: newData.description,
           quantity: newData.quantity,
+          alert_enabled: newData.alert_enabled,
+          stock_limit: newData.stock_limit,
           warehouses: newData.warehouse.map((warehouse) => warehouse.id),
           }
         }
@@ -444,7 +448,6 @@ try {
       removableSort
     >
 
-
       <Column field="image"editor="true">
         <template #body="slotProps">
           <img
@@ -472,7 +475,7 @@ try {
       </template>
       </Column>
 
-      <Column field="is_stock_low" header="En stock" sortable>
+      <Column field="is_stock_low" header="Alerte" sortable>
         <template #body="slotProps">
           <Tag
             :severity="slotProps.data.is_stock_low
@@ -482,6 +485,24 @@ try {
               ? 'STOCK FAIBLE'
               : 'EN STOCK'"
           />
+        </template>
+        <template #editor="slotProps">
+          <InputGroup>
+          <InputGroupAddon>
+            <Checkbox
+                :binary="true"
+                id="modifiy-alert"
+                v-model="slotProps.data.alert_enabled"
+            />
+          </InputGroupAddon>
+              <InputNumber
+                :disabled="!slotProps.data.alert_enabled"
+                id="modifiy-stock-limit"
+                inputId="integeronly"
+                v-model="slotProps.data.stock_limit"
+                fluid
+              />
+          </InputGroup>
         </template>
       </Column>
 

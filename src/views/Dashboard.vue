@@ -17,8 +17,8 @@ import Chip from 'primevue/chip';
 
 const toast = useToast();
 
-const products = ref();
-const warehouses = ref();
+const products = ref([]);
+const warehouses = ref([]);
 
 const selectedRef = ref()
 const filteredRef = ref();
@@ -171,7 +171,11 @@ function makeAlert(productsAlerts){
             </form>
         </Fieldset>
         <Fieldset class="fieldset-section fieldset-list-wh-p" legend="Products et Entrepôt">
-            <Carousel :value="products" 
+            <h4 v-if="products.length === 0">
+                <i class="pi pi-exclamation-circle"></i>
+                Aucun produit renseigné
+            </h4>
+            <Carousel v-else :value="products" 
             :numVisible="3" 
             :numScroll="1" 
             >
@@ -191,7 +195,11 @@ function makeAlert(productsAlerts){
                 </template>
             </Carousel>
             <Divider />
-            <Carousel :value="warehouses" 
+            <h4 v-if="warehouses.length === 0">
+                <i class="pi pi-exclamation-circle"></i>
+                Aucun entrepôt renseigné
+            </h4>
+            <Carousel v-else :value="warehouses" 
             :numVisible="3" 
             :numScroll="1" 
             >

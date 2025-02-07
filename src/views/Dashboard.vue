@@ -14,6 +14,7 @@ import { useToast } from 'primevue/usetoast';
 import Divider from 'primevue/divider';
 import ScrollPanel from 'primevue/scrollpanel';
 import Chip from 'primevue/chip';
+import PMessage from 'primevue/message';
 
 const toast = useToast();
 
@@ -24,6 +25,7 @@ const selectedRef = ref()
 const filteredRef = ref();
 const newValue = ref();
 
+const modifyErrors = ref({});
 const chartProductsData = ref();
 const chartWarehousesData = ref();
 const chartOptions = {plugins:{legend:{labels:{usePointStyle:true,}}}};
@@ -111,6 +113,7 @@ const productValueModifier = async () => {
 
     const product = products.value.find(p => p.reference === selectedRef.value.reference);
     if (product) {
+        modifyErrors.value = {};
         const newQuantity = product.quantity + newValue.value
         try{
             await modifyProduct({
@@ -122,10 +125,16 @@ const productValueModifier = async () => {
             chartProductsData.value = setChartProductsData();
             chartWarehousesData.value = setChartWarehousesData();
         } catch (error){
-            console.error(error)
+            if (error.response && error.response.data) {
+                const data = error.response.data;
+                if (data.detail) {
+                    toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: data.detail });
+                };
+                modifyErrors.value = { quantity: data.quantity ? data.quantity[0]:"" }
+            };
         }
     } else {
-        console.error("no product found")
+        toast.add({ severity: 'error',life: 2500, summary: 'Erreur', detail: 'Une erreur est survenue.' });
     }
 };
 function makeAlert(productsAlerts){
@@ -162,6 +171,7 @@ function makeAlert(productsAlerts){
                     <InputNumber inputId="number-value" showButtons v-model="newValue" mode="decimal" fluid></InputNumber>
                     <label for="number-value">Ajouter/Soustraire :</label>
                 </IftaLabel>
+                <p-message v-if="modifyErrors.quantity" severity="error">{{ modifyErrors.quantity }}</p-message>
                 <Button
                     label="Modifier"
                     icon="pi pi-file-edit
@@ -176,8 +186,9 @@ function makeAlert(productsAlerts){
                 Aucun produit renseigné
             </h4>
             <Carousel v-else :value="products" 
-            :numVisible="3" 
-            :numScroll="1" 
+            :numVisible="2" 
+            :numScroll="1"
+            class="carousmex"
             >
                 <template #item="slotProps">
                     <div class="carousel-products">
@@ -200,8 +211,9 @@ function makeAlert(productsAlerts){
                 Aucun entrepôt renseigné
             </h4>
             <Carousel v-else :value="warehouses" 
-            :numVisible="3" 
+            :numVisible="2" 
             :numScroll="1" 
+            class="carousmex"
             >
                 <template #item="slotProps" >
                     <div class="carousel-products">

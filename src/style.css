@@ -3,16 +3,31 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #1d1d1d;
+  color-scheme: normal;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
 
+    color-scheme: dark;
+    background-color: #1d1d1d;
+    color: rgba(255, 255, 255, 0.87);
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
 a {
   font-weight: 500;
   color: #646cff;
@@ -30,7 +45,7 @@ ul{
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
-  color:rgb(255, 255, 255)
+
 }
 
 #app {
@@ -48,6 +63,7 @@ h1 {
   grid-template-columns: 2fr 2fr 1fr;
   grid-template-rows: auto auto auto;
   gap: 20px;
+  justify-content: center ;
 }
 .fieldset-section{
   padding:20px
@@ -109,4 +125,7 @@ h1 {
   gap: 1rem;
   padding-bottom: 2rem;
 
+}
+.carousmex{
+  width: 600px;
 }

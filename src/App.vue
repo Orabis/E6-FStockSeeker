@@ -58,8 +58,11 @@
 </script>
 
 <template>
-  <h1>StockSeeker</h1>
+  <div class="header">
+    <img src="./assets/logo.png" alt="" style="width: 8rem">
+    <h1>StockSeeker</h1>
+  </div>
   <Toast />
-  <Menubar :model="getMenuItems()" />
+  <Menubar class="menubar" :model="getMenuItems()" />
   <RouterView />
-  </template>
+</template>

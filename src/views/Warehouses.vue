@@ -6,10 +6,10 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import PMessage from 'primevue/message';
 import InputNumber from 'primevue/inputnumber';
-import InputGroup from 'primevue/inputgroup';
-import InputGroupAddon from 'primevue/inputgroupaddon';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Dialog from 'primevue/dialog';
+import IftaLabel from 'primevue/iftalabel';
 
 const toast = useToast();
 
@@ -17,6 +17,7 @@ const warehouses = ref([]);
 const warehouseName = ref('');
 const warehouseLocation = ref('');
 const warehouseMaxCapacity = ref(0);
+const visible = ref(false);
 
 const registerErrors = ref({ name: '', location: '', max_capacity: ''});
 const modifyErrors = ref({name:'', location:'', max_capacity:''})
@@ -129,36 +130,39 @@ onMounted(async () => {
 <template>
     <div>
         <h2>Gérer les entrepôts</h2>
+
+        <Button label="Crée un nouvel entrepôt" @click="visible = true"></Button>
+        <Dialog v-model:visible="visible" modal header="Nouvel Entrepôt" :style="{ width: '25rem' }">
         <div class="register form-container">
-            <h2>Créer un entrepôt</h2>
             <form @submit.prevent="create_warehouse">
                 <div class="form">
-                    <InputGroup>
-                        <InputGroupAddon>Nom :</InputGroupAddon>
-                        <InputText type="text" id="register-warehouse" v-model="warehouseName" required />
-                    </InputGroup>
+                    <IftaLabel>
+                        <InputText name="register-name" type="text" id="register-name" v-model="warehouseName" required fluid/>
+                        <label for="register-name">Nom de l'entrepôt :</label>
+                    </IftaLabel>
                     <p-message v-if="registerErrors.name" severity="error">{{ registerErrors.name }}</p-message>
                 </div>
 
                 <div class="form">
-                    <InputGroup>
-                        <InputGroupAddon>Location :</InputGroupAddon>
-                        <InputText type="text" id="register-location" v-model="warehouseLocation" required />
-                    </InputGroup>
+                    <IftaLabel>
+                        <InputText name="register-location" type="text" id="register-location" v-model="warehouseLocation" required fluid/>
+                        <label for="register-location">Location :</label>
+                    </IftaLabel>
                     <p-message v-if="registerErrors.location" severity="error">{{ registerErrors.location }}</p-message>
                 </div>
 
                 <div class="form">
-                    <InputGroup>
-                        <InputGroupAddon>Capacité maximale :</InputGroupAddon>
-                        <InputNumber id="register-max-capacity" v-model="warehouseMaxCapacity" required />
-                    </InputGroup>
+                    <IftaLabel>
+                        <InputNumber name="register-max-capacity" id="register-max-capacity" v-model="warehouseMaxCapacity" required fluid />
+                        <label for="register-max-capacity">Capacité totale :</label>
+                    </IftaLabel>
                     <p-message v-if="registerErrors.max_capacity" severity="error">{{ registerErrors.max_capacity }}</p-message>
                 </div>
-
-                <Button label="Créer" type="submit" class="p-button-primary" />
+                <Button type="button" label="Cancel" severity="secondary" class="p-button-text" @click="visible = false"></Button>
+                <Button type="submit" label="Créer" class="p-button-primary" @click="visible = false" />
             </form>
         </div>
+        </Dialog>
 
         <DataTable v-model:editingRows="editingRows" editMode="row" dataKey="id" @row-edit-save="onRowEditSave" :value="warehouses" tableStyle="min-width: 50rem" removableSort>
 

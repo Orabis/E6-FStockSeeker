@@ -11,6 +11,7 @@ import InputNumber from 'primevue/inputnumber';
 import IftaLabel from 'primevue/iftalabel';
 import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast';
+import Divider from 'primevue/divider';
 
 const toast = useToast();
 
@@ -131,64 +132,67 @@ function makeAlert(productsAlerts){
 </script>
 
 <template>
+    <div class="fieldset-container">
+        <Fieldset class="fieldset-section fieldset-p-graph" legend="Produits stockés" >
+            <Chart type="pie" :data="chartProductsData" :options="chartOptions"></Chart>
+        </Fieldset>
+        <Fieldset class="fieldset-section fieldset-wh-graph" legend="Listes des Entrepôts" >
+            <Chart type="bar" :data="chartWarehousesData" :options="chartOptions"></Chart>
+        </Fieldset>
+        <Fieldset class="fieldset-section fieldset-capacity-usage" legend="Used capacity" >
+            <ul>
+                <li v-for="warehouse in warehouses" :key="warehouse.id" style="list-style-type: none;">
+                    {{ warehouse.name }}
+                    <MeterGroup :value="getProductValues(warehouse)"></MeterGroup>
+                </li>
+            </ul>
+        </Fieldset>
+        <Fieldset class="fieldset-section fieldset-quickadd" legend="Ajout Rapide" >
+            <form @submit.prevent="productValueModifier">
+                <IftaLabel>
+                    <AutoComplete inputId="reference" name="reference" optionLabel="reference" variant="filled" :suggestions="filteredRef" v-model="selectedRef" @complete="search" fluid></AutoComplete>
+                    <label for="reference">Reference</label>
+                </IftaLabel>
+                <IftaLabel>
+                    <InputNumber inputId="number-value" showButtons v-model="newValue" mode="decimal" fluid></InputNumber>
+                    <label for="number-value">Ajouter/Soustraire</label>
+                </IftaLabel>
+                <Button
+                    label="update"
+                    type="submit"
+                    class="p-button-primary"> </Button>
+            </form>
+        </Fieldset>
+        <Fieldset class="fieldset-section fieldset-list-wh-p" legend="Products et Entrepôt" >
+            <Carousel :value="products" 
+            :numVisible="3" 
+            :numScroll="1" 
+            >
+                <template #item="slotProps">
+                    <span v-if="slotProps.data.alert_enabled && slotProps.data.is_stock_low" style="color:red">
+                        <Tag severity="danger" value="STOCK FAIBLE" rounded> </Tag>
+                    </span>
+                    <span v-else>
+                        <Tag severity="info" value="STOCK OK" rounded> </Tag>
+                    </span>
+                    <p>{{ slotProps.data.name }}</p>
+                    <p>{{ slotProps.data.reference }}</p>
+                    <p>{{ slotProps.data.quantity }}</p>
+                    <img :src="slotProps.data.image" alt="" style="border-radius: 8px; width: 150px;">
+                </template>
+            </Carousel>
+            <Divider />
+            <Carousel :value="warehouses" 
+            :numVisible="3" 
+            :numScroll="1" 
+            >
+                <template #item="slotProps">
+                    <p>{{ slotProps.data.name }}</p>
+                    <p>{{ slotProps.data.location }}</p>
+                    <p>{{ slotProps.data.max_capacity }}</p>
+                </template>
+            </Carousel>
+        </Fieldset>
 
-    <Fieldset legend="Produits stockés" style="max-width: 600px; margin: auto; padding:20px" toggleable>
-        <Chart type="pie" :data="chartProductsData" :options="chartOptions"></Chart>
-    </Fieldset>
-    <Fieldset legend="Listes des Entrepôts" style="max-width: 600px; margin: auto; padding:20px" toggleable>
-        <Chart type="bar" :data="chartWarehousesData" :options="chartOptions"></Chart>
-    </Fieldset>
-    <Fieldset legend="Used capacity" style="max-width: 600px; margin: auto; padding:20px" toggleable>
-        <ul>
-            <li v-for="warehouse in warehouses" :key="warehouse.id" style="list-style-type: none;">
-                {{ warehouse.name }}
-                <MeterGroup :value="getProductValues(warehouse)"></MeterGroup>
-            </li>
-        </ul>
-    </Fieldset>
-    <Fieldset legend="Products" style="max-width: 600px; margin: auto; padding:20px" toggleable>
-        <form @submit.prevent="productValueModifier">
-            <IftaLabel>
-                <AutoComplete inputId="reference" name="reference" optionLabel="reference" variant="filled" :suggestions="filteredRef" v-model="selectedRef" @complete="search"></AutoComplete>
-                <label for="reference">Reference</label>
-            </IftaLabel>
-            <IftaLabel>
-                <InputNumber inputId="number-value" showButtons v-model="newValue" mode="decimal"></InputNumber>
-                <label for="number-value">Ajouter/Soustraire</label>
-            </IftaLabel>
-            <Button
-                label="update"
-                type="submit"
-                class="p-button-primary"> </Button>
-        </form>
-        <Carousel :value="products" 
-        :numVisible="3" 
-        :numScroll="1" 
-        >
-            <template #item="slotProps">
-                <span v-if="slotProps.data.alert_enabled && slotProps.data.is_stock_low" style="color:red">
-                    <Tag severity="danger" value="STOCK FAIBLE" rounded> </Tag>
-                </span>
-                <span v-else>
-                    <Tag severity="info" value="STOCK OK" rounded> </Tag>
-                </span>
-                <p>{{ slotProps.data.name }}</p>
-                <p>{{ slotProps.data.reference }}</p>
-                <p>{{ slotProps.data.quantity }}</p>
-                <img :src="slotProps.data.image" alt="" style="border-radius: 8px; width: 150px;">
-            </template>
-        </Carousel>
-    </Fieldset>
-    <Fieldset legend="Warehouses" style="max-width: 600px; margin: auto; padding:20px" toggleable>
-        <Carousel :value="warehouses" 
-        :numVisible="3" 
-        :numScroll="1" 
-        >
-            <template #item="slotProps">
-                <p>{{ slotProps.data.name }}</p>
-                <p>{{ slotProps.data.location }}</p>
-                <p>{{ slotProps.data.max_capacity }}</p>
-            </template>
-        </Carousel>
-    </Fieldset>
+    </div>
 </template>

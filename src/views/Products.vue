@@ -8,8 +8,7 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import PMessage from 'primevue/message';
 import InputNumber from 'primevue/inputnumber';
-import InputGroup from 'primevue/inputgroup';
-import InputGroupAddon from 'primevue/inputgroupaddon';
+import IftaLabel from 'primevue/iftalabel';
 import Checkbox from 'primevue/checkbox';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -17,11 +16,16 @@ import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import FileUpload from 'primevue/fileupload';
 import MultiSelect from 'primevue/multiselect';
+import Dialog from 'primevue/dialog';
+import InputGroup from 'primevue/inputgroup';
+import InputGroupAddon from 'primevue/inputgroupaddon';
 
 const toast = useToast();
 const formatDate = (date) => DateTime.fromISO(date).toLocaleString(DateTime.DATETIME_MED);
 
 const products = ref([]);
+
+const visible = ref(false);
 
 const productName = ref('');
 const productReference = ref('');
@@ -266,18 +270,21 @@ try {
   <div>
     <h2>Tableau de bord</h2>
     <div class="register form-container">
-      <h2>Créer un produit</h2>
+      <Button label="Crée un nouveau produit" @click="visible = true" />
+      <Dialog v-model:visible="visible" modal header="Nouveau Produit" :style="{ width: '25rem' }">
       <form @submit.prevent="create_product">
         <div class="form">
-          <InputGroup>
-            <InputGroupAddon>Nom :</InputGroupAddon>
+          <IftaLabel>
             <InputText
+              name="register-product"
               type="text"
               id="register-product"
               v-model="productName"
               required
+              fluid
             />
-          </InputGroup>
+            <label for="register-product">Nom :</label>
+          </IftaLabel>
           <p-message
             v-if="registerErrors.name"
             severity="error"
@@ -285,16 +292,16 @@ try {
             {{ registerErrors.name }}
           </p-message>
         </div>
-        
         <div class="form">
-          <InputGroup>
-            <InputGroupAddon>Reference :</InputGroupAddon>
+          <IftaLabel>
             <InputText
               type="text"
               id="register-reference"
               v-model="productReference"
+              fluid
             />
-          </InputGroup>
+            <label for="register-reference">Reference :</label>
+          </IftaLabel>
           <p-message
             v-if="registerErrors.description"
             severity="error"
@@ -304,14 +311,15 @@ try {
         </div>
 
         <div class="form">
-          <InputGroup>
-            <InputGroupAddon>Description :</InputGroupAddon>
+          <IftaLabel>
             <InputText
               type="text"
               id="register-description"
               v-model="productDescription"
+              fluid
             />
-          </InputGroup>
+            <label for="register-description">Description :</label>
+          </IftaLabel>
           <p-message
             v-if="registerErrors.description"
             severity="error"
@@ -321,8 +329,7 @@ try {
         </div>
 
         <div class="form">
-          <InputGroup>
-            <InputGroupAddon>Quantité :</InputGroupAddon>
+          <IftaLabel>
             <InputNumber
               id="register-quantity"
               inputId="integeronly"
@@ -330,36 +337,47 @@ try {
               fluid
               required
             />
-          </InputGroup>
+            <label for="register-quantity">Quantité :</label>
+          </IftaLabel>
         </div>
 
         <div class="form">
           <InputGroup>
-            <InputGroupAddon>
-              Activer une alerte ?
+            <InputGroupAddon> 
               <Checkbox
                 :binary="true"
                 id="register-alert"
                 v-model="productAlert"
               />
             </InputGroupAddon>
-            <InputNumber
-              v-if="productAlert"
-              id="register-stock-limit"
-              inputId="integeronly"
-              v-model="productStockLimit"
-              fluid
-            />
+            <IftaLabel>
+              <InputNumber
+                :disabled="!productAlert"
+                id="register-stock-limit"
+                inputId="integeronly"
+                v-model="productStockLimit"
+                fluid
+              />
+              <label for="register-stock-limit">Alerte en dessous de :</label>
+          </IftaLabel>
           </InputGroup>
         </div>
+        <div class="form">
+          <IftaLabel>
+              <MultiSelect
+                name="register-warehouses"
+                v-model="selectedWarehouses"
+                :options="warehouses"
+                optionLabel="name"
+                placeholder="Sélectionner un entrepôt"
+                :invalid="!!registerErrors.warehouses"
+                fluid
+                ></MultiSelect>
+                <label for="register-warehouses">Entrepôt :</label>
+          </IftaLabel>
+        </div>
           <div class="form">
-            <InputGroup >
-              <InputGroupAddon>Image :</InputGroupAddon>
-              <InputGroupAddon v-if="b64Img">
-                <img :src="b64Img" alt="Image" style="width: 6rem">
-                <Button icon="pi pi-times" severity="secondary" @click="resetForms()"/>
-              </InputGroupAddon>
-                <FileUpload
+              <FileUpload
                 name="productImage"
                 accept="image/*" 
                 mode="basic"
@@ -370,20 +388,10 @@ try {
                 :chooseLabel="'Choisir une image'"
                 @uploader="handleFileUpload($event,true)" 
                 />
-            </InputGroup>
-        </div>
-        <div class="form">
-          <InputGroup>
-              <InputGroupAddon>Entrepôt :</InputGroupAddon>
-              <MultiSelect
-                v-model="selectedWarehouses"
-                :options="warehouses"
-                optionLabel="name"
-                placeholder="Sélectionner un entrepôt"
-                display="chip"
-                :invalid="!!registerErrors.warehouses"
-                ></MultiSelect>
-          </InputGroup>
+              <div v-if="b64Img">
+                <img :src="b64Img" alt="Image" style="width: 6rem">
+                <Button icon="pi pi-times" severity="secondary" @click="resetForms()"/>
+              </div>
         </div>
         <div class="alert">
           <p-message
@@ -419,12 +427,15 @@ try {
             {{ registerErrors.reference }}
           </p-message>
         </div>
+        <Button type="button" label="Cancel" severity="secondary" class="p-button-text" @click="visible = false" autofocus />
         <Button
           label="Créer"
           type="submit"
           class="p-button-primary"
+          @click="visible = false"
         />
       </form>
+      </Dialog>
     </div>
 
     <DataTable
@@ -437,15 +448,7 @@ try {
       tableStyle="min-width: 50rem"
       removableSort
     >
-      <template #header>
-        <div class="text-end pb-4">
-          <Button
-            icon="pi pi-external-link"
-            label="Export"
-            @click="exportCSV($event)"
-          />
-        </div>
-      </template>
+
 
       <Column field="image"editor="true">
         <template #body="slotProps">
@@ -454,7 +457,7 @@ try {
             style="width: 6rem"
           />
         </template>
-        <template #editor="slotProps">
+        <template #editor>
           <FileUpload
           name="editProductImage"
           accept="image/*"
@@ -470,9 +473,6 @@ try {
         <div v-if="b64Modif">
           <img :src="b64Modif" alt="Image" style="width: 6rem">
           <Button icon="pi pi-times" severity="secondary" @click="resetImg(true)"/>
-        </div>
-        <div v-else>
-          <img :src="slotProps.data.image" alt="Image" style="width: 6rem;">
         </div>
       </template>
       </Column>

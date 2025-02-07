@@ -32,3 +32,31 @@ h1 {
   max-width: 1600px;
   margin: 0 auto;
 }
+.menubar{
+  margin-bottom: 2rem;
+}
+.header{
+  display: flex;
+}
+.fieldset-container{
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 20px;
+}
+.fieldset-section{
+  padding:20px
+}
+
+.fieldset-wh-graph{
+  grid-column: 1;
+}
+
+.fieldset-quickadd{
+  grid-row: 1;
+  grid-column: 3;
+}
+.fieldset-list-wh-p{
+  grid-row: 1;
+  grid-column: 2;
+}

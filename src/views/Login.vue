@@ -8,6 +8,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
+import IftaLabel from 'primevue/iftalabel';
 
 
 const { userInfo, isAuth } = useAuth();
@@ -127,25 +128,25 @@ async function modify_user() {
       <Dialog header="Modifier l'utilisateur" v-model:visible="showDialog" :style="{ width: '30vw' }" modal:draggable="false">
         <form @submit.prevent="modify_user">
           <div class="field">
-            <label for="modify-username">
-              Nom d'utilisateur
-            </label>
-            <InputText id="modify-username" v-model="usernameModify" placeholder="Nom d'utilisateur" class="w-full" required />
+            <IftaLabel>
+              <InputText id="modify-username" v-model="usernameModify" placeholder="" class="w-full" required fluid />
+              <label for="modify-username">Nom d'utilisateur :</label>
+            </IftaLabel>
           </div>
           <div class="field">
-            <label for="modify-email">
-              Email
-            </label>
-            <InputText id="modify-email" v-model="emailModify" type="email" placeholder="Adresse email" class="w-full" required />
+            <IftaLabel>
+              <InputText id="modify-email" v-model="emailModify" type="email" class="w-full" required fluid />
+              <label for="modify-email">Email :</label>
+            </IftaLabel>
           </div>
           <div class="field">
-            <label for="modify-password">
-              Mot de passe
-            </label>
-            <Password id="modify-password" v-model="passwordModify" feedback toggleMask placeholder="Nouveau mot de passe" class="w-full" required />
+            <IftaLabel>
+              <Password id="modify-password" v-model="passwordModify" feedback toggleMask class="w-full" required fluid/>
+              <label for="modify-password">Mot de passe :</label>
+            </IftaLabel>
           </div>
           <div class="flex justify-content-end mt-3">
-            <Button label="Annuler" class="p-button-text" @click="showDialog = false">
+            <Button label="Annuler" severity="secondary" class="p-button-text" @click="showDialog = false">
               Annuler
             </Button>
             <Button label="Enregistrer" type="submit" class="p-button-primary">

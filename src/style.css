@@ -60,3 +60,39 @@ h1 {
   grid-row: 1;
   grid-column: 2;
 }
+
+.create-btn{
+  margin-bottom: 1rem;
+}
+.form-update-user{
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.p-button-override{
+  width: auto !important;
+}
+.form-img-adds{
+  display: flex;
+  flex-direction: column;
+}
+
+.registered-container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.account-container{
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  max-width: 450px;
+  margin: auto;
+}
+.account-login{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

@@ -131,10 +131,9 @@ onMounted(async () => {
     <div>
         <h2>Gérer les entrepôts</h2>
 
-        <Button label="Crée un nouvel entrepôt" @click="visible = true"></Button>
+        <Button class="create-btn" icon="pi pi-arrow-up-right-and-arrow-down-left-from-center" label="Crée un nouvel entrepôt" @click="visible = true"></Button>
         <Dialog v-model:visible="visible" modal header="Nouvel Entrepôt" :style="{ width: '25rem' }">
-        <div class="register form-container">
-            <form @submit.prevent="create_warehouse">
+            <form class="form-update-user" @submit.prevent="create_warehouse">
                 <div class="form">
                     <IftaLabel>
                         <InputText name="register-name" type="text" id="register-name" v-model="warehouseName" required fluid/>
@@ -158,10 +157,9 @@ onMounted(async () => {
                     </IftaLabel>
                     <p-message v-if="registerErrors.max_capacity" severity="error">{{ registerErrors.max_capacity }}</p-message>
                 </div>
-                <Button type="button" label="Cancel" severity="secondary" class="p-button-text" @click="visible = false"></Button>
-                <Button type="submit" label="Créer" class="p-button-primary" @click="visible = false" />
+                <Button type="button" icon="pi pi-ban" label="Cancel" severity="secondary" class="p-button-text" @click="visible = false"></Button>
+                <Button type="submit" icon="pi pi-check" label="Créer" class="p-button-primary" @click="visible = false" />
             </form>
-        </div>
         </Dialog>
 
         <DataTable v-model:editingRows="editingRows" editMode="row" dataKey="id" @row-edit-save="onRowEditSave" :value="warehouses" tableStyle="min-width: 50rem" removableSort>
@@ -197,7 +195,6 @@ onMounted(async () => {
             </Column>
             
             <Column field="actual_capacity" header="Capacité actuelle" editor="false" sortable />
-
 
             <Column editor="true">
                 <template #editor="slotProps">

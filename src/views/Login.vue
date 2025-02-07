@@ -9,6 +9,7 @@ import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import IftaLabel from 'primevue/iftalabel';
+import Divider from 'primevue/divider';
 
 
 const { userInfo, isAuth } = useAuth();
@@ -118,97 +119,96 @@ async function modify_user() {
 </script>
 
 <template>
-  <div class="container">
-    <div v-if="isAuth" class="form-container" style="display: flex;flex-direction: column; justify-content: center; align-items: center;">
-      <p v-if="userInfo">Bienvenue, {{ userInfo.username }}</p>
+  <div class="login-container">
+    <div v-if="isAuth" class="registered-container">
+      <h2 v-if="userInfo">Bienvenue, {{ userInfo.username }}</h2>
       <p v-if="userInfo">Email : {{ userInfo.email }}</p>
-      <Button label="Modifier l'utilisateur" icon="pi pi-user-edit" @click="showDialog = true">
-        Modifier l'utilisateur
-      </Button>
-      <Dialog header="Modifier l'utilisateur" v-model:visible="showDialog" :style="{ width: '30vw' }" modal:draggable="false">
-        <form @submit.prevent="modify_user">
+      <Button label="Modifier l'utilisateur" icon="pi pi-user-edit" @click="showDialog = true"></Button>
+      <Dialog header="Modifier l'utilisateur" v-model:visible="showDialog" :style="{ width: '30vw' }" modal>
+        <form class="form-update-user" @submit.prevent="modify_user">
           <div class="field">
             <IftaLabel>
-              <InputText id="modify-username" v-model="usernameModify" placeholder="" class="w-full" required fluid />
+              <InputText id="modify-username" v-model="usernameModify" placeholder="" required fluid />
               <label for="modify-username">Nom d'utilisateur :</label>
             </IftaLabel>
           </div>
           <div class="field">
             <IftaLabel>
-              <InputText id="modify-email" v-model="emailModify" type="email" class="w-full" required fluid />
+              <InputText id="modify-email" v-model="emailModify" type="email" required fluid />
               <label for="modify-email">Email :</label>
             </IftaLabel>
           </div>
           <div class="field">
             <IftaLabel>
-              <Password id="modify-password" v-model="passwordModify" feedback toggleMask class="w-full" required fluid/>
+              <Password id="modify-password" v-model="passwordModify" feedback toggleMask required fluid/>
               <label for="modify-password">Mot de passe :</label>
             </IftaLabel>
           </div>
-          <div class="flex justify-content-end mt-3">
-            <Button label="Annuler" severity="secondary" class="p-button-text" @click="showDialog = false">
-              Annuler
-            </Button>
-            <Button label="Enregistrer" type="submit" class="p-button-primary">
-              Enregistrer
-            </Button>
-          </div>
+          <Button label="Annuler" icon="pi pi-ban" severity="secondary" class="p-button-text" @click="showDialog = false"></Button>
+          <Button label="Enregistrer" icon="pi pi-address-book" type="submit" class="p-button-primary"></Button>
         </form>
       </Dialog>
     </div>
 
-    <div v-if="!isAuth" class="forms-container" style="display: flex;flex-direction: row; justify-content: space-around; align-items: center;">
-      <div class="register form-container">
-        <h2>Créer un Compte :</h2>
-        <form @submit.prevent="make_user">
-          <div class="form">
-            <label for="username">
-              Nom d'utilisateur :
-            </label>
-            <InputText type="text" id="register-username" v-model="usernameRegister" required />
-            <p-message v-if="registerErrors.username" severity="error">
-              {{ registerErrors.username }}
-            </p-message>
-          </div>
-          <div class="form">
-            <label for="email">
-              Email :
-            </label>
-            <InputText type="email" id="register-email" v-model="emailRegister" required />
-            <p-message v-if="registerErrors.email" severity="error">
-              {{ registerErrors.email }}
-            </p-message>
-          </div>
-          <div class="form">
-            <label for="password">
-              Mot de passe :
-            </label>
-            <Password id="register-password" v-model="passwordRegister" toggleMask required />
-          </div>
-          <Button label="S'inscrire" type="submit" class="p-button-primary" />
-        </form>
-      </div>
-
-      <div class="login form-container">
+    <div v-if="!isAuth" class="account-container">
+      <div class="account-logon account-login">
         <h2>Se connecter :</h2>
-        <form @submit.prevent="login_user">
+        <form class="form-update-user" @submit.prevent="login_user">
           <div class="form">
-            <label for="username">Nom d'utilisateur :</label>
-            <InputText type="text" id="login-username" v-model="usernameLogin" required />
+            <IftaLabel>
+              <InputText type="text" id="login-username" v-model="usernameLogin" required fluid/>
+              <label for="username">Nom d'utilisateur :</label>
+            </IftaLabel>
             <p-message v-if="loginErrors.username" severity="error">
               {{ loginErrors.username }}
             </p-message>
           </div>
           <div class="form">
-            <label for="password">Mot de passe :</label>
-            <Password id="login-password" v-model="passwordLogin" toggleMask :feedback="false" required />
+            <IftaLabel>
+              <Password id="login-password" v-model="passwordLogin" toggleMask :feedback="false" required fluid />
+              <label for="password">Mot de passe :</label>
+            </IftaLabel>
             <p-message v-if="loginErrors.password" severity="error">
               {{ loginErrors.password }}
             </p-message>
           </div>
-          <Button label="Se connecter" type="submit" class="p-button-primary" />
+          <Button label="Se connecter" type="submit" icon="pi pi-sign-in" class="p-button-primary"/>
         </form>
       </div>
+      <Divider></Divider>
+      <Button label="Crée un Compte" icon="pi pi-user-plus" @click="showDialog = true"></Button>
+      <Dialog header="Inscription" v-model:visible="showDialog" :style="{ width: '30vw' }" modal>
+        <div class="account-logon account-register">
+          <form class="form-update-user" @submit.prevent="make_user">
+            <div class="form">
+              <IftaLabel>
+                <InputText type="text" id="register-username" v-model="usernameRegister" required fluid/>
+                <label for="username">Nom d'utilisateur :</label>
+              </IftaLabel>
+              <p-message v-if="registerErrors.username" severity="error">
+                {{ registerErrors.username }}
+              </p-message>
+            </div>
+            <div class="form">
+              <IftaLabel>
+              <InputText type="email" id="register-email" v-model="emailRegister" required fluid/>
+                <label for="email">Email :</label>
+              </IftaLabel>
+              <p-message v-if="registerErrors.email" severity="error">
+                {{ registerErrors.email }}
+              </p-message>
+            </div>
+            <div class="form">
+              <IftaLabel>
+                <Password id="register-password" v-model="passwordRegister" toggleMask required fluid/>
+                <label for="password">Mot de passe :</label>
+              </IftaLabel>
+            </div>
+            <Button type="button" label="Cancel" severity="secondary" class="p-button-text" @click="visible = false"></Button>
+            <Button label="S'inscrire" type="submit" class="p-button-primary" />
+          </form>
+        </div>
+      </Dialog>
     </div>
   </div>
 </template>

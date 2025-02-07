@@ -23,12 +23,12 @@
         {
           label: 'Gerer les produits',
           command:() => router.push({name:'products'}),
-          icon: 'pi pi-home',
+          icon: 'pi pi-barcode',
         },
         {
           label: 'Gerer les entrepôts',
           command:() => router.push({name:'warehouses'}),
-          icon: 'pi pi-home',
+          icon: 'pi pi-warehouse',
         },
         {
           label:userInfo.value ? userInfo.value.username : 'Profil',

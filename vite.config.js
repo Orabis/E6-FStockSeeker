@@ -7,11 +7,10 @@ export default defineConfig({
     'process.env': process.env,
   },
   server: {
-    host: true,
-    strictPort: true,
     port: 5000,
-    watch: {
-      usePolling: true,
+    host: "0.0.0.0",
+    hmr: {
+      clientPort: 80,
     },
   },
 });
